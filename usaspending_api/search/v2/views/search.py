@@ -23,6 +23,7 @@ from usaspending_api.awards.v2.filters.view_selector import get_view_queryset
 from usaspending_api.awards.v2.filters.view_selector import spending_by_award_count
 from usaspending_api.awards.v2.filters.view_selector import spending_by_geography
 from usaspending_api.awards.v2.filters.view_selector import spending_over_time
+from usaspending_api.awards.v2.filters.view_selector import transaction_spending_summary
 from usaspending_api.awards.v2.lookups.lookups import award_type_mapping
 from usaspending_api.awards.v2.lookups.lookups import contract_type_mapping
 from usaspending_api.awards.v2.lookups.lookups import loan_type_mapping
@@ -786,23 +787,66 @@ class SpendingByTransactionVisualizationViewSet(APIView):
         if validated_payload['sort'] not in validated_payload['fields']:
             raise InvalidParameterException("Sort value not found in fields: {}".format(validated_payload['sort']))
 
-        lower_limit = (validated_payload['page'] - 1) * validated_payload['limit']
-        success, response, total = search_transactions(validated_payload, lower_limit, validated_payload['limit'] + 1)
-        if not success:
-            raise InvalidParameterException(response)
+        fields = validated_payload.get("fields", None)
+        order = validated_payload.get("order", "desc")
+        limit = validated_payload.get("limit", 50)
+        page = validated_payload.get("page", 1)
 
-        metadata = get_simple_pagination_metadata(len(response), validated_payload['limit'], validated_payload['page'])
+        lower_limit = (page - 1) * limit
+        upper_limit = page * limit
+
+        filters = {item['name']: validated_payload[item['name']] for item in AWARD_FILTER if item['name'] in validated_payload}
+
+        queryset = matview_search_filter(filters, UniversalTransactionView).values()
+
+        TRANSACTIONS_LOOKUP = {
+            "Recipient Name": "recipient_name",
+            "Action Date": "action_date",
+            "Transaction Amount": "federal_action_obligation",
+            "Awarding Agency": "awarding_toptier_agency_name",
+            "Awarding Sub Agency": "awarding_subtier_agency_name",
+            "Funding Agency": "funding_toptier_agency_name",
+            "Funding Sub Agency": "funding_subtier_agency_name",
+            "Issued Date": "period_of_performance_start_date",
+            "Loan Value": "face_value_loan_guarantee",
+            "Subsidy Cost": "original_loan_subsidy_cost",
+            "Mod": "modification_number",
+            "Award ID": "award_id",
+            "awarding_agency_id": "awarding_agency_id",
+            "internal_id": "award_id",
+            "Award Type": 'type',
+        }
+        TRANSACTIONS_LOOKUP.update({v: k for k, v in TRANSACTIONS_LOOKUP.items()})
+
+        values = [TRANSACTIONS_LOOKUP[i] for i in validated_payload['fields']]
+        sort_filters = [TRANSACTIONS_LOOKUP[validated_payload.get("sort", validated_payload['fields'][0])]]
+
+        if order == 'desc':
+            sort_filters = ['-' + sort_filter for sort_filter in sort_filters]
+
+        queryset = queryset.order_by(*sort_filters).values(*list(values))
+
+        limited_queryset = queryset[lower_limit:upper_limit + 1]
+        from usaspending_api.common.helpers import generate_raw_quoted_query
+        print('=======================================')
+        print(request.path)
+        print(generate_raw_quoted_query(queryset))
+        page_metadata = get_simple_pagination_metadata(len(limited_queryset), limit, page)
+        # has_next = len(limited_queryset) > limit
 
         results = []
-        for transaction in response[:validated_payload['limit']]:
-            results.append(transaction)
+        for award in limited_queryset[:limit]:
+            row = {TRANSACTIONS_LOOKUP[k]:v for k, v in award.items()}
+            results.append(row)
 
+        # build response
         response = {
-            'limit': validated_payload['limit'],
+            'limit': limit,
             'results': results,
-            'page_metadata': metadata
+            'page_metadata': page_metadata
         }
         return Response(response)
+
 
 
 class TransactionSummaryVisualizationViewSet(APIView):
@@ -817,16 +861,35 @@ class TransactionSummaryVisualizationViewSet(APIView):
                 Desired values:
                     total number of transactions `award_count`
                     The federal_action_obligation sum of all those transactions `award_spending`
-
             *Note* Only deals with prime awards, future plans to include sub-awards.
         """
 
-        models = [{'name': 'keyword', 'key': 'filters|keyword', 'type': 'text', 'text_type': 'search', 'min': 3}]
+        filters = request.data.get("filters", None)
+        models = []
+        models.extend(AWARD_FILTER)
+        # models = [{'name': 'keyword', 'key': 'filters|keyword', 'type': 'text', 'text_type': 'search', 'min': 3}]
         validated_payload = TinyShield(models).block(request.data)
 
-        results = spending_by_transaction_sum_and_count(validated_payload)
-        if not results:
-            raise ElasticsearchConnectionException('Error generating the transaction sums and counts')
+        queryset, model = transaction_spending_summary(validated_payload)
+
+        if model in ['UniversalTransactionView']:
+            agg_results = queryset.aggregate(
+                award_count=Count('*'),  # surprisingly, this works to create "SELECT COUNT(*) ..."
+                award_spending=Sum("federal_action_obligation"))
+        else:
+            # "summary" materialized views are pre-aggregated and contain a counts col
+            agg_results = queryset.aggregate(
+                award_count=Sum('counts'),
+                award_spending=Sum("federal_action_obligation"))
+
+        results = {
+            # The Django Aggregate command will return None if no rows are a match.
+            # It is cleaner to return 0 than "None"/null so the values are checked for None
+            'prime_awards_count': agg_results['award_count'] or 0,
+            'prime_awards_obligation_amount': agg_results['award_spending'] or 0.0,
+        }
+
+        # build response
         return Response({"results": results})
 
 
@@ -839,10 +902,66 @@ class SpendingByTransactionCountVisualizaitonViewSet(APIView):
     @cache_response()
     def post(self, request):
 
-        models = [{'name': 'keyword', 'key': 'filters|keyword', 'type': 'text', 'text_type': 'search', 'min': 3}]
+        models = []
+        models.extend(AWARD_FILTER)
         validated_payload = TinyShield(models).block(request.data)
 
-        results = spending_by_transaction_count(validated_payload)
-        if not results:
-            raise ElasticsearchConnectionException('Error during the aggregations')
+        filters = {item['name']: validated_payload[item['name']] for item in AWARD_FILTER if item['name'] in validated_payload}
+
+        queryset, model = transaction_spending_summary(filters)
+
+        from usaspending_api.common.helpers import generate_raw_quoted_query
+        print('=======================================')
+        print(request.path)
+        print(generate_raw_quoted_query(queryset))
+
+        # if model in ['UniversalTransactionView']:
+        #     agg_results = queryset.aggregate(
+        #         award_count=Count('*'),  # surprisingly, this works to create "SELECT COUNT(*) ..."
+        #         award_spending=Sum("federal_action_obligation"))
+        # else:
+        #     # "summary" materialized views are pre-aggregated and contain a counts col
+        #     agg_results = queryset.aggregate(
+        #         award_count=Sum('counts'),
+        #         award_spending=Sum("federal_action_obligation"))
+        # # queryset = matview_search_filter(filters, UniversalTransactionView).values()
+
+
+        if model == 'UniversalTransactionView':
+            # for IDV CONTRACTS category is null. change to contract
+            queryset = queryset \
+                .values('award_category') \
+                .annotate(
+                    category_count=Count(Coalesce('award_category', Value('contract'))),
+                    category=F('award_category')) \
+                .values('category', 'category_count')
+        else:
+            queryset = queryset \
+                .values("award_category") \
+                .annotate(
+                    category_count=Sum('counts'),
+                    category=F('award_category')
+                )
+
+        results = {"contracts": 0, "grants": 0, "direct_payments": 0, "loans": 0, "other": 0}
+
+        categories = {
+            'contract': 'contracts',
+            'grant': 'grants',
+            'direct payment': 'direct_payments',
+            'loans': 'loans',
+            'other': 'other'
+        }
+
+        # DB hit here
+        for award in queryset:
+            if award['category'] is None:
+                result_key = 'contracts'
+            elif award['category'] not in categories.keys():
+                result_key = 'other'
+            else:
+                result_key = categories[award['category']]
+            results[result_key] += award['category_count']
+
+        # build response
         return Response({"results": results})
