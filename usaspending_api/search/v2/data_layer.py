@@ -304,17 +304,11 @@ def spending_by_transaction_data(request, payload):
     queryset = queryset.order_by(*sort_filters).values(*list(values))
 
     limited_queryset = queryset[lower_limit:upper_limit + 1]
-    from usaspending_api.common.helpers import generate_raw_quoted_query
-    print('=======================================')
-    print(request.path)
-    print(generate_raw_quoted_query(queryset))
     page_metadata = get_simple_pagination_metadata(len(limited_queryset), limit, page)
-    # has_next = len(limited_queryset) > limit
 
-    results = []
-    for award in limited_queryset[:limit]:
-        row = {TRANSACTIONS_LOOKUP[k]: v for k, v in award.items()}
-        results.append(row)
+    results = [
+        {TRANSACTIONS_LOOKUP[k]: v for k, v in award.items()} for award in limited_queryset[:limit]
+    ]
 
     # build response
     return {
