@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from usaspending_api.search.v2.views.search import AwardSummaryVisualizationViewSet
 from usaspending_api.search.v2.views.search import SpendingByAwardCountVisualizationViewSet
 from usaspending_api.search.v2.views.search import SpendingByAwardVisualizationViewSet
 # from usaspending_api.search.v2.views.search import SpendingByCategoryVisualizationViewSet
@@ -16,5 +17,6 @@ urlpatterns = [
     url(r'^spending_by_award', SpendingByAwardVisualizationViewSet.as_view()),
     url(r'^spending_by_transaction_count', SpendingByTransactionCountVisualizaitonViewSet.as_view()),
     url(r'^spending_by_transaction', SpendingByTransactionVisualizationViewSet.as_view()),
-    url(r'^transaction_spending_summary', TransactionSummaryVisualizationViewSet.as_view())
+    url(r'^transaction_spending_summary', TransactionSummaryVisualizationViewSet.as_view()),
+    url(r'^award_spending_summary', AwardSummaryVisualizationViewSet.as_view()),
 ]
