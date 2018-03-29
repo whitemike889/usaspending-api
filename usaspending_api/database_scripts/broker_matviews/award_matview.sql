@@ -251,7 +251,7 @@ FROM
         NULL::NUMERIC AS potential_total_value_of_award,
         SUM(COALESCE(tf.base_and_all_options_value::NUMERIC, 0::NUMERIC)) over w AS base_and_all_options_value,
         latest_transaction.last_modified::DATE AS last_modified_date,
-        latest_transaction.action_date::DATE AS certified_date,
+        MAX(NULLIF(tf.action_date, '''')::DATE) over w AS certified_date,
         NULL::int AS record_type,
         latest_transaction.detached_award_proc_unique AS latest_transaction_unique_id,
         0 AS total_subaward_amount,
@@ -495,7 +495,7 @@ FROM
     FROM
         detached_award_procurement tf
         INNER JOIN
-        (SELECT * FROM detached_award_procurement AS tf_sub WHERE tf_sub.action_date = certified_date AND tf_sub.piid = tf.piid AND tf_sub.parent_award_id = tf.parent_award_id AND tf_sub.agency_id = tf.agency_id AND tf_sub.referenced_idv_agency_iden = tf.referenced_idv_agency_iden) AS latest_transaction ON latest_transaction.detached_award_proc_unique = tf.detached_award_proc_unique
+        (SELECT * FROM detached_award_procurement AS tf_sub WHERE tf_sub.action_date = tf.certified_date AND tf_sub.piid = tf.piid AND tf_sub.parent_award_id = tf.parent_award_id AND tf_sub.agency_id = tf.agency_id AND tf_sub.referenced_idv_agency_iden = tf.referenced_idv_agency_iden) AS latest_transaction ON latest_transaction.detached_award_proc_unique = tf.detached_award_proc_unique
         LEFT OUTER JOIN
         exec_comp_lookup AS exec_comp ON exec_comp.awardee_or_recipient_uniqu = latest_transaction.awardee_or_recipient_uniqu
     window w AS (partition BY tf.piid, tf.parent_award_id, tf.agency_id, tf.referenced_idv_agency_iden)
@@ -971,7 +971,7 @@ FROM
     NULL::NUMERIC AS potential_total_value_of_award,
     NULL::NUMERIC AS base_and_all_options_value,
     latest_transaction.modified_at::DATE AS last_modified_date,
-    latest_transaction.action_date::DATE AS certified_date,
+    MAX(NULLIF(pafa.action_date, '''')::DATE) over w AS certified_date,
     latest_transaction.record_type AS record_type,
     latest_transaction.afa_generated_unique AS latest_transaction_unique_id,
     0 AS total_subaward_amount,
@@ -1155,7 +1155,7 @@ FROM
 
 FROM published_award_financial_assistance AS pafa
     INNER JOIN
-    (SELECT * FROM published_award_financial_assistance AS pafa_sub WHERE pafa_sub.action_date = certified_date AND pafa_sub.fain = pafa.fain AND pafa_sub.awarding_sub_tier_agency_c = pafa.awarding_sub_tier_agency_c) AS latest_transaction ON latest_transaction.afa_generated_unique = pafa.afa_generated_unique
+    (SELECT * FROM published_award_financial_assistance AS pafa_sub WHERE pafa_sub.action_date = pafa.certified_date AND pafa_sub.fain = pafa.fain AND pafa_sub.awarding_sub_tier_agency_c = pafa.awarding_sub_tier_agency_c) AS latest_transaction ON latest_transaction.afa_generated_unique = pafa.afa_generated_unique
     LEFT OUTER JOIN
     exec_comp_lookup AS exec_comp ON exec_comp.awardee_or_recipient_uniqu = latest_transaction.awardee_or_recipient_uniqu
 WHERE pafa.record_type = ''2'' AND is_active=TRUE
@@ -1632,7 +1632,7 @@ FROM
     NULL::NUMERIC AS potential_total_value_of_award,
     NULL::NUMERIC AS base_and_all_options_value,
     latest_transaction.modified_at::DATE AS last_modified_date,
-    latest_transaction.action_date::DATE AS certified_date,
+    MAX(NULLIF(pafa.action_date, '''')::DATE) over w AS certified_date,
     latest_transaction.record_type AS record_type,
     latest_transaction.afa_generated_unique AS latest_transaction_unique_id,
     0 AS total_subaward_amount,
@@ -1816,7 +1816,7 @@ FROM
 
 FROM published_award_financial_assistance AS pafa
     INNER JOIN
-    (SELECT * FROM published_award_financial_assistance AS pafa_sub WHERE pafa_sub.action_date = certified_date AND pafa_sub.uri = pafa.uri AND pafa_sub.awarding_sub_tier_agency_c = pafa.awarding_sub_tier_agency_c) AS latest_transaction ON latest_transaction.afa_generated_unique = pafa.afa_generated_unique
+    (SELECT * FROM published_award_financial_assistance AS pafa_sub WHERE pafa_sub.action_date = pafa.certified_date AND pafa_sub.uri = pafa.uri AND pafa_sub.awarding_sub_tier_agency_c = pafa.awarding_sub_tier_agency_c) AS latest_transaction ON latest_transaction.afa_generated_unique = pafa.afa_generated_unique
     LEFT OUTER JOIN
     exec_comp_lookup AS exec_comp ON exec_comp.awardee_or_recipient_uniqu = latest_transaction.awardee_or_recipient_uniqu
 WHERE pafa.record_type = ''1'' AND is_active=TRUE
