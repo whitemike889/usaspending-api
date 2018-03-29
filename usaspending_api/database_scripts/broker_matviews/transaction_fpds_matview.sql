@@ -583,3 +583,9 @@ CREATE MATERIALIZED VIEW transaction_fpds_matview_new AS
         updated_at timestamp without time zone
     )
 );
+
+BEGIN;
+ALTER MATERIALIZED VIEW IF EXISTS transaction_fpds_matview RENAME TO transaction_fpds_matview_old;
+ALTER MATERIALIZED VIEW IF EXISTS transaction_fpds_matview_new RENAME TO transaction_fpds_matview;
+DROP MATERIALIZED VIEW IF EXISTS transaction_fpds_matview_old;
+COMMIT;

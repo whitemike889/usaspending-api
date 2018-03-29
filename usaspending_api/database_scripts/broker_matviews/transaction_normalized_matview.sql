@@ -442,7 +442,9 @@ agency_lookup AS awarding_agency ON awarding_agency.subtier_code = awarding_subt
 LEFT OUTER JOIN
 agency_lookup AS funding_agency ON funding_agency.subtier_code = funding_subtier_agency_code
 );
---
---ALTER MATERIALIZED VIEW IF EXISTS transaction_matview RENAME TO transaction_matview_old;
---ALTER MATERIALIZED VIEW IF EXISTS transaction_matview_new RENAME TO transaction_matview;
---DROP MATERIALIZED VIEW IF EXISTS transaction_matview_old;
+
+BEGIN;
+ALTER MATERIALIZED VIEW IF EXISTS transaction_normalized_matview RENAME TO transaction_normalized_matview_old;
+ALTER MATERIALIZED VIEW IF EXISTS transaction_normalized_matview_new RENAME TO transaction_normalized_matview;
+DROP MATERIALIZED VIEW IF EXISTS transaction_normalized_matview_old;
+COMMIT;
