@@ -213,214 +213,213 @@ FROM
             COALESCE(tf.referenced_idv_agency_iden,''-NONE-'') || ''_'' ||
             COALESCE(tf.piid,''-NONE-'') || ''_'' ||
             COALESCE(tf.parent_award_id,''-NONE-'') AS generated_unique_award_id,
-        latest_transaction.contract_award_type AS type,
-        latest_transaction.contract_award_type_desc AS type_description,
-        latest_transaction.agency_id AS agency_id,
-        latest_transaction.referenced_idv_agency_iden AS referenced_idv_agency_iden,
-        latest_transaction.referenced_idv_agency_desc AS referenced_idv_agency_desc,
-        latest_transaction.multiple_or_single_award_i AS multiple_or_single_award_i,
-        latest_transaction.multiple_or_single_aw_desc AS multiple_or_single_aw_desc,
-        latest_transaction.type_of_idc AS type_of_idc,
-        latest_transaction.type_of_idc_description AS type_of_idc_description,
-        latest_transaction.piid AS piid,
-        latest_transaction.parent_award_id AS parent_award_piid,
+        LAST_VALUE(contract_award_type) over w AS type,
+        LAST_VALUE(contract_award_type_desc) over w AS type_description,
+        LAST_VALUE(agency_id) over w AS agency_id,
+        LAST_VALUE(referenced_idv_agency_iden) over w AS referenced_idv_agency_iden,
+        LAST_VALUE(referenced_idv_agency_desc) over w AS referenced_idv_agency_desc,
+        LAST_VALUE(multiple_or_single_award_i) over w AS multiple_or_single_award_i,
+        LAST_VALUE(multiple_or_single_aw_desc) over w AS multiple_or_single_aw_desc,
+        LAST_VALUE(type_of_idc) over w AS type_of_idc,
+        LAST_VALUE(type_of_idc_description) over w AS type_of_idc_description,
+        LAST_VALUE(piid) over w AS piid,
+        LAST_VALUE(parent_award_id) over w AS parent_award_piid,
         NULL::text AS fain,
-        NULL::text AS uri,
+        NULL::text AS uri,) over w
         SUM(COALESCE(tf.federal_action_obligation::NUMERIC, 0::NUMERIC)) over w AS total_obligation,
         NULL::NUMERIC AS total_subsidy_cost,
         NULL::NUMERIC AS total_loan_value,
         NULL::NUMERIC AS total_outlay,
-        latest_transaction.awarding_agency_code AS awarding_agency_code,
-        latest_transaction.awarding_agency_name AS awarding_agency_name,
-        latest_transaction.awarding_sub_tier_agency_c AS awarding_sub_tier_agency_c,
-        latest_transaction.awarding_sub_tier_agency_n AS awarding_sub_tier_agency_n,
-        latest_transaction.awarding_office_code AS awarding_office_code,
-        latest_transaction.awarding_office_name AS awarding_office_name,
-        latest_transaction.funding_agency_code AS funding_agency_code,
-        latest_transaction.funding_agency_name AS funding_agency_name,
-        latest_transaction.funding_sub_tier_agency_co AS funding_sub_tier_agency_co,
-        latest_transaction.funding_sub_tier_agency_na AS funding_sub_tier_agency_na,
-        latest_transaction.funding_office_code AS funding_office_code,
-        latest_transaction.funding_office_name AS funding_office_name,
-        NULLIF(latest_transaction.action_date, '''')::DATE AS action_date,
+        LAST_VALUE(awarding_agency_code) over w AS awarding_agency_code,
+        LAST_VALUE(awarding_agency_name) over w AS awarding_agency_name,
+        LAST_VALUE(awarding_sub_tier_agency_c) over w AS awarding_sub_tier_agency_c,
+        LAST_VALUE(awarding_sub_tier_agency_n) over w AS awarding_sub_tier_agency_n,
+        LAST_VALUE(awarding_office_code) over w AS awarding_office_code,
+        LAST_VALUE(awarding_office_name) over w AS awarding_office_name,
+        LAST_VALUE(funding_agency_code) over w AS funding_agency_code,
+        LAST_VALUE(funding_agency_name) over w AS funding_agency_name,
+        LAST_VALUE(funding_sub_tier_agency_co) over w AS funding_sub_tier_agency_co,
+        LAST_VALUE(funding_sub_tier_agency_na) over w AS funding_sub_tier_agency_na,
+        LAST_VALUE(funding_office_code) over w AS funding_office_code,
+        LAST_VALUE(funding_office_name) over w AS funding_office_name,
+        NULLIF(LAST_VALUE(action_date) over w, '''')::DATE AS action_date,
         MIN(NULLIF(tf.action_date, '''')::DATE) over w AS date_signed,
-        latest_transaction.award_description AS description,
-        -- TODO: Handle when period_of_performance_star/period_of_performance_curr is ''
+        LAST_VALUE(award_description) over w AS description,
         MIN(NULLIF(tf.period_of_performance_star, '''')::DATE) over w AS period_of_performance_start_date,
         MAX(NULLIF(tf.period_of_performance_curr, '''')::DATE) over w AS period_of_performance_current_end_date,
         NULL::NUMERIC AS potential_total_value_of_award,
         SUM(COALESCE(tf.base_and_all_options_value::NUMERIC, 0::NUMERIC)) over w AS base_and_all_options_value,
-        latest_transaction.last_modified::DATE AS last_modified_date,
+        LAST_VALUE(last_modified::DATE) over w AS last_modified_date,
         MAX(NULLIF(tf.action_date, '''')::DATE) over w AS certified_date,
         NULL::int AS record_type,
-        latest_transaction.detached_award_proc_unique AS latest_transaction_unique_id,
+        LAST_VALUE(detached_award_proc_unique) over w AS latest_transaction_unique_id,
         0 AS total_subaward_amount,
         0 AS subaward_count,
-        latest_transaction.pulled_from AS pulled_from,
-        latest_transaction.product_or_service_code AS product_or_service_code,
-        latest_transaction.product_or_service_co_desc AS product_or_service_co_desc,
-        latest_transaction.extent_competed AS extent_competed,
-        latest_transaction.extent_compete_description AS extent_compete_description,
-        latest_transaction.type_of_contract_pricing AS type_of_contract_pricing,
-        latest_transaction.type_of_contract_pric_desc AS type_of_contract_pric_desc,
-        latest_transaction.contract_award_type_desc AS contract_award_type_desc,
-        latest_transaction.cost_or_pricing_data AS cost_or_pricing_data,
-        latest_transaction.cost_or_pricing_data_desc AS cost_or_pricing_data_desc,
-        latest_transaction.domestic_or_foreign_entity AS domestic_or_foreign_entity,
-        latest_transaction.domestic_or_foreign_e_desc AS domestic_or_foreign_e_desc,
-        latest_transaction.fair_opportunity_limited_s AS fair_opportunity_limited_s,
-        latest_transaction.fair_opportunity_limi_desc AS fair_opportunity_limi_desc,
-        latest_transaction.foreign_funding AS foreign_funding,
-        latest_transaction.foreign_funding_desc AS foreign_funding_desc,
-        latest_transaction.interagency_contracting_au AS interagency_contracting_au,
-        latest_transaction.interagency_contract_desc AS interagency_contract_desc,
-        latest_transaction.major_program AS major_program,
-        latest_transaction.price_evaluation_adjustmen AS price_evaluation_adjustmen,
-        latest_transaction.program_acronym AS program_acronym,
-        latest_transaction.subcontracting_plan AS subcontracting_plan,
-        latest_transaction.subcontracting_plan_desc AS subcontracting_plan_desc,
-        latest_transaction.multi_year_contract AS multi_year_contract,
-        latest_transaction.multi_year_contract_desc AS multi_year_contract_desc,
-        latest_transaction.purchase_card_as_payment_m AS purchase_card_as_payment_m,
-        latest_transaction.purchase_card_as_paym_desc AS purchase_card_as_paym_desc,
-        latest_transaction.consolidated_contract AS consolidated_contract,
-        latest_transaction.consolidated_contract_desc AS consolidated_contract_desc,
-        latest_transaction.solicitation_identifier AS solicitation_identifier,
-        latest_transaction.solicitation_procedures AS solicitation_procedures,
-        latest_transaction.solicitation_procedur_desc AS solicitation_procedur_desc,
-        latest_transaction.number_of_offers_received AS number_of_offers_received,
-        latest_transaction.other_than_full_and_open_c AS other_than_full_and_open_c,
-        latest_transaction.other_than_full_and_o_desc AS other_than_full_and_o_desc,
-        latest_transaction.commercial_item_acquisitio AS commercial_item_acquisitio,
-        latest_transaction.commercial_item_acqui_desc AS commercial_item_acqui_desc,
-        latest_transaction.commercial_item_test_progr AS commercial_item_test_progr,
-        latest_transaction.commercial_item_test_desc AS commercial_item_test_desc,
-        latest_transaction.evaluated_preference AS evaluated_preference,
-        latest_transaction.evaluated_preference_desc AS evaluated_preference_desc,
-        latest_transaction.fed_biz_opps AS fed_biz_opps,
-        latest_transaction.fed_biz_opps_description AS fed_biz_opps_description,
-        latest_transaction.small_business_competitive AS small_business_competitive,
-        latest_transaction.dod_claimant_program_code AS dod_claimant_program_code,
-        latest_transaction.dod_claimant_prog_cod_desc AS dod_claimant_prog_cod_desc,
-        latest_transaction.program_system_or_equipmen AS program_system_or_equipmen,
-        latest_transaction.program_system_or_equ_desc AS program_system_or_equ_desc,
-        latest_transaction.information_technology_com AS information_technology_com,
-        latest_transaction.information_technolog_desc AS information_technolog_desc,
-        latest_transaction.sea_transportation AS sea_transportation,
-        latest_transaction.sea_transportation_desc AS sea_transportation_desc,
-        latest_transaction.clinger_cohen_act_planning AS clinger_cohen_act_planning,
-        latest_transaction.clinger_cohen_act_pla_desc AS clinger_cohen_act_pla_desc,
-        latest_transaction.davis_bacon_act AS davis_bacon_act,
-        latest_transaction.davis_bacon_act_descrip AS davis_bacon_act_descrip,
-        latest_transaction.service_contract_act AS service_contract_act,
-        latest_transaction.service_contract_act_desc AS service_contract_act_desc,
-        latest_transaction.walsh_healey_act AS walsh_healey_act,
-        latest_transaction.walsh_healey_act_descrip AS walsh_healey_act_descrip,
-        latest_transaction.naics AS naics,
-        latest_transaction.naics_description AS naics_description,
-        latest_transaction.idv_type AS idv_type,
-        latest_transaction.idv_type_description AS idv_type_description,
-        latest_transaction.type_set_aside AS type_set_aside,
-        latest_transaction.type_set_aside_description AS type_set_aside_description,
+        LAST_VALUE(pulled_from) over w AS pulled_from,
+        LAST_VALUE(product_or_service_code) over w AS product_or_service_code,
+        LAST_VALUE(product_or_service_co_desc) over w AS product_or_service_co_desc,
+        LAST_VALUE(extent_competed) over w AS extent_competed,
+        LAST_VALUE(extent_compete_description) over w AS extent_compete_description,
+        LAST_VALUE(type_of_contract_pricing) over w AS type_of_contract_pricing,
+        LAST_VALUE(type_of_contract_pric_desc) over w AS type_of_contract_pric_desc,
+        LAST_VALUE(contract_award_type_desc) over w AS contract_award_type_desc,
+        LAST_VALUE(cost_or_pricing_data) over w AS cost_or_pricing_data,
+        LAST_VALUE(cost_or_pricing_data_desc) over w AS cost_or_pricing_data_desc,
+        LAST_VALUE(domestic_or_foreign_entity) over w AS domestic_or_foreign_entity,
+        LAST_VALUE(domestic_or_foreign_e_desc) over w AS domestic_or_foreign_e_desc,
+        LAST_VALUE(fair_opportunity_limited_s) over w AS fair_opportunity_limited_s,
+        LAST_VALUE(fair_opportunity_limi_desc) over w AS fair_opportunity_limi_desc,
+        LAST_VALUE(foreign_funding) over w AS foreign_funding,
+        LAST_VALUE(foreign_funding_desc) over w AS foreign_funding_desc,
+        LAST_VALUE(interagency_contracting_au) over w AS interagency_contracting_au,
+        LAST_VALUE(interagency_contract_desc) over w AS interagency_contract_desc,
+        LAST_VALUE(major_program) over w AS major_program,
+        LAST_VALUE(price_evaluation_adjustmen) over w AS price_evaluation_adjustmen,
+        LAST_VALUE(program_acronym) over w AS program_acronym,
+        LAST_VALUE(subcontracting_plan) over w AS subcontracting_plan,
+        LAST_VALUE(subcontracting_plan_desc) over w AS subcontracting_plan_desc,
+        LAST_VALUE(multi_year_contract) over w AS multi_year_contract,
+        LAST_VALUE(multi_year_contract_desc) over w AS multi_year_contract_desc,
+        LAST_VALUE(purchase_card_as_payment_m) over w AS purchase_card_as_payment_m,
+        LAST_VALUE(purchase_card_as_paym_desc) over w AS purchase_card_as_paym_desc,
+        LAST_VALUE(consolidated_contract) over w AS consolidated_contract,
+        LAST_VALUE(consolidated_contract_desc) over w AS consolidated_contract_desc,
+        LAST_VALUE(solicitation_identifier) over w AS solicitation_identifier,
+        LAST_VALUE(solicitation_procedures) over w AS solicitation_procedures,
+        LAST_VALUE(solicitation_procedur_desc) over w AS solicitation_procedur_desc,
+        LAST_VALUE(number_of_offers_received) over w AS number_of_offers_received,
+        LAST_VALUE(other_than_full_and_open_c) over w AS other_than_full_and_open_c,
+        LAST_VALUE(other_than_full_and_o_desc) over w AS other_than_full_and_o_desc,
+        LAST_VALUE(commercial_item_acquisitio) over w AS commercial_item_acquisitio,
+        LAST_VALUE(commercial_item_acqui_desc) over w AS commercial_item_acqui_desc,
+        LAST_VALUE(commercial_item_test_progr) over w AS commercial_item_test_progr,
+        LAST_VALUE(commercial_item_test_desc) over w AS commercial_item_test_desc,
+        LAST_VALUE(evaluated_preference) over w AS evaluated_preference,
+        LAST_VALUE(evaluated_preference_desc) over w AS evaluated_preference_desc,
+        LAST_VALUE(fed_biz_opps) over w AS fed_biz_opps,
+        LAST_VALUE(fed_biz_opps_description) over w AS fed_biz_opps_description,
+        LAST_VALUE(small_business_competitive) over w AS small_business_competitive,
+        LAST_VALUE(dod_claimant_program_code) over w AS dod_claimant_program_code,
+        LAST_VALUE(dod_claimant_prog_cod_desc) over w AS dod_claimant_prog_cod_desc,
+        LAST_VALUE(program_system_or_equipmen) over w AS program_system_or_equipmen,
+        LAST_VALUE(program_system_or_equ_desc) over w AS program_system_or_equ_desc,
+        LAST_VALUE(information_technology_com) over w AS information_technology_com,
+        LAST_VALUE(information_technolog_desc) over w AS information_technolog_desc,
+        LAST_VALUE(sea_transportation) over w AS sea_transportation,
+        LAST_VALUE(sea_transportation_desc) over w AS sea_transportation_desc,
+        LAST_VALUE(clinger_cohen_act_planning) over w AS clinger_cohen_act_planning,
+        LAST_VALUE(clinger_cohen_act_pla_desc) over w AS clinger_cohen_act_pla_desc,
+        LAST_VALUE(davis_bacon_act) over w AS davis_bacon_act,
+        LAST_VALUE(davis_bacon_act_descrip) over w AS davis_bacon_act_descrip,
+        LAST_VALUE(service_contract_act) over w AS service_contract_act,
+        LAST_VALUE(service_contract_act_desc) over w AS service_contract_act_desc,
+        LAST_VALUE(walsh_healey_act) over w AS walsh_healey_act,
+        LAST_VALUE(walsh_healey_act_descrip) over w AS walsh_healey_act_descrip,
+        LAST_VALUE(naics) over w AS naics,
+        LAST_VALUE(naics_description) over w AS naics_description,
+        LAST_VALUE(idv_type) over w AS idv_type,
+        LAST_VALUE(idv_type_description) over w AS idv_type_description,
+        LAST_VALUE(type_set_aside) over w AS type_set_aside,
+        LAST_VALUE(type_set_aside_description) over w AS type_set_aside_description,
         NULL::text AS assistance_type,
         NULL::text AS business_funds_indicator,
         NULL::text AS business_types,
         NULL::text AS business_types_description,
         compile_fpds_business_categories(
-            latest_transaction.contracting_officers_deter,
-            latest_transaction.corporate_entity_tax_exemp,
-            latest_transaction.corporate_entity_not_tax_e,
-            latest_transaction.partnership_or_limited_lia,
-            latest_transaction.sole_proprietorship,
-            latest_transaction.manufacturer_of_goods,
-            latest_transaction.subchapter_s_corporation,
-            latest_transaction.limited_liability_corporat,
-            latest_transaction.for_profit_organization,
-            latest_transaction.alaskan_native_owned_corpo,
-            latest_transaction.american_indian_owned_busi,
-            latest_transaction.asian_pacific_american_own,
-            latest_transaction.black_american_owned_busin,
-            latest_transaction.hispanic_american_owned_bu,
-            latest_transaction.native_american_owned_busi,
-            latest_transaction.native_hawaiian_owned_busi,
-            latest_transaction.subcontinent_asian_asian_i,
-            latest_transaction.tribally_owned_business,
-            latest_transaction.other_minority_owned_busin,
-            latest_transaction.minority_owned_business,
-            latest_transaction.women_owned_small_business,
-            latest_transaction.economically_disadvantaged,
-            latest_transaction.joint_venture_women_owned,
-            latest_transaction.joint_venture_economically,
-            latest_transaction.woman_owned_business,
-            latest_transaction.service_disabled_veteran_o,
-            latest_transaction.veteran_owned_business,
-            latest_transaction.c8a_program_participant,
-            latest_transaction.the_ability_one_program,
-            latest_transaction.dot_certified_disadvantage,
-            latest_transaction.emerging_small_business,
-            latest_transaction.federally_funded_research,
-            latest_transaction.historically_underutilized,
-            latest_transaction.labor_surplus_area_firm,
-            latest_transaction.sba_certified_8_a_joint_ve,
-            latest_transaction.self_certified_small_disad,
-            latest_transaction.small_agricultural_coopera,
-            latest_transaction.small_disadvantaged_busine,
-            latest_transaction.community_developed_corpor,
-            latest_transaction.domestic_or_foreign_entity,
-            latest_transaction.foreign_owned_and_located,
-            latest_transaction.foreign_government,
-            latest_transaction.international_organization,
-            latest_transaction.domestic_shelter,
-            latest_transaction.hospital_flag,
-            latest_transaction.veterinary_hospital,
-            latest_transaction.foundation,
-            latest_transaction.community_development_corp,
-            latest_transaction.nonprofit_organization,
-            latest_transaction.educational_institution,
-            latest_transaction.other_not_for_profit_organ,
-            latest_transaction.state_controlled_instituti,
-            latest_transaction.c1862_land_grant_college,
-            latest_transaction.c1890_land_grant_college,
-            latest_transaction.c1994_land_grant_college,
-            latest_transaction.private_university_or_coll,
-            latest_transaction.minority_institution,
-            latest_transaction.historically_black_college,
-            latest_transaction.tribal_college,
-            latest_transaction.alaskan_native_servicing_i,
-            latest_transaction.native_hawaiian_servicing,
-            latest_transaction.hispanic_servicing_institu,
-            latest_transaction.school_of_forestry,
-            latest_transaction.veterinary_college,
-            latest_transaction.us_federal_government,
-            latest_transaction.federal_agency,
-            latest_transaction.us_government_entity,
-            latest_transaction.interstate_entity,
-            latest_transaction.us_state_government,
-            latest_transaction.council_of_governments,
-            latest_transaction.city_local_government,
-            latest_transaction.county_local_government,
-            latest_transaction.inter_municipal_local_gove,
-            latest_transaction.municipality_local_governm,
-            latest_transaction.township_local_government,
-            latest_transaction.us_local_government,
-            latest_transaction.local_government_owned,
-            latest_transaction.school_district_local_gove,
-            latest_transaction.us_tribal_government,
-            latest_transaction.indian_tribe_federally_rec,
-            latest_transaction.housing_authorities_public,
-            latest_transaction.airport_authority,
-            latest_transaction.port_authority,
-            latest_transaction.transit_authority,
-            latest_transaction.planning_commission
+            LAST_VALUE(contracting_officers_deter) over w,
+            LAST_VALUE(corporate_entity_tax_exemp) over w,
+            LAST_VALUE(corporate_entity_not_tax_e) over w,
+            LAST_VALUE(partnership_or_limited_lia) over w,
+            LAST_VALUE(sole_proprietorship) over w,
+            LAST_VALUE(manufacturer_of_goods) over w,
+            LAST_VALUE(subchapter_s_corporation) over w,
+            LAST_VALUE(limited_liability_corporat) over w,
+            LAST_VALUE(for_profit_organization) over w,
+            LAST_VALUE(alaskan_native_owned_corpo) over w,
+            LAST_VALUE(american_indian_owned_busi) over w,
+            LAST_VALUE(asian_pacific_american_own) over w,
+            LAST_VALUE(black_american_owned_busin) over w,
+            LAST_VALUE(hispanic_american_owned_bu) over w,
+            LAST_VALUE(native_american_owned_busi) over w,
+            LAST_VALUE(native_hawaiian_owned_busi) over w,
+            LAST_VALUE(subcontinent_asian_asian_i) over w,
+            LAST_VALUE(tribally_owned_business) over w,
+            LAST_VALUE(other_minority_owned_busin) over w,
+            LAST_VALUE(minority_owned_business) over w,
+            LAST_VALUE(women_owned_small_business) over w,
+            LAST_VALUE(economically_disadvantaged) over w,
+            LAST_VALUE(joint_venture_women_owned) over w,
+            LAST_VALUE(joint_venture_economically) over w,
+            LAST_VALUE(woman_owned_business) over w,
+            LAST_VALUE(service_disabled_veteran_o) over w,
+            LAST_VALUE(veteran_owned_business) over w,
+            LAST_VALUE(c8a_program_participant) over w,
+            LAST_VALUE(the_ability_one_program) over w,
+            LAST_VALUE(dot_certified_disadvantage) over w,
+            LAST_VALUE(emerging_small_business) over w,
+            LAST_VALUE(federally_funded_research) over w,
+            LAST_VALUE(historically_underutilized) over w,
+            LAST_VALUE(labor_surplus_area_firm) over w,
+            LAST_VALUE(sba_certified_8_a_joint_ve) over w,
+            LAST_VALUE(self_certified_small_disad) over w,
+            LAST_VALUE(small_agricultural_coopera) over w,
+            LAST_VALUE(small_disadvantaged_busine) over w,
+            LAST_VALUE(community_developed_corpor) over w,
+            LAST_VALUE(domestic_or_foreign_entity) over w,
+            LAST_VALUE(foreign_owned_and_located) over w,
+            LAST_VALUE(foreign_government) over w,
+            LAST_VALUE(international_organization) over w,
+            LAST_VALUE(domestic_shelter) over w,
+            LAST_VALUE(hospital_flag) over w,
+            LAST_VALUE(veterinary_hospital) over w,
+            LAST_VALUE(foundation) over w,
+            LAST_VALUE(community_development_corp) over w,
+            LAST_VALUE(nonprofit_organization) over w,
+            LAST_VALUE(educational_institution) over w,
+            LAST_VALUE(other_not_for_profit_organ) over w,
+            LAST_VALUE(state_controlled_instituti) over w,
+            LAST_VALUE(c1862_land_grant_college) over w,
+            LAST_VALUE(c1890_land_grant_college) over w,
+            LAST_VALUE(c1994_land_grant_college) over w,
+            LAST_VALUE(private_university_or_coll) over w,
+            LAST_VALUE(minority_institution) over w,
+            LAST_VALUE(historically_black_college) over w,
+            LAST_VALUE(tribal_college) over w,
+            LAST_VALUE(alaskan_native_servicing_i) over w,
+            LAST_VALUE(native_hawaiian_servicing) over w,
+            LAST_VALUE(hispanic_servicing_institu) over w,
+            LAST_VALUE(school_of_forestry) over w,
+            LAST_VALUE(veterinary_college) over w,
+            LAST_VALUE(us_federal_government) over w,
+            LAST_VALUE(federal_agency) over w,
+            LAST_VALUE(us_government_entity) over w,
+            LAST_VALUE(interstate_entity) over w,
+            LAST_VALUE(us_state_government) over w,
+            LAST_VALUE(council_of_governments) over w,
+            LAST_VALUE(city_local_government) over w,
+            LAST_VALUE(county_local_government) over w,
+            LAST_VALUE(inter_municipal_local_gove) over w,
+            LAST_VALUE(municipality_local_governm) over w,
+            LAST_VALUE(township_local_government) over w,
+            LAST_VALUE(us_local_government) over w,
+            LAST_VALUE(local_government_owned) over w,
+            LAST_VALUE(school_district_local_gove) over w,
+            LAST_VALUE(us_tribal_government) over w,
+            LAST_VALUE(indian_tribe_federally_rec) over w,
+            LAST_VALUE(housing_authorities_public) over w,
+            LAST_VALUE(airport_authority) over w,
+            LAST_VALUE(port_authority) over w,
+            LAST_VALUE(transit_authority) over w,
+            LAST_VALUE(planning_commission) over w
         ) AS business_categories,
         NULL::text AS cfda_number,
         NULL::text AS cfda_title,
         NULL::text AS sai_number,
 
         -- recipient data
-        latest_transaction.awardee_or_recipient_uniqu AS recipient_unique_id, -- DUNS
-        latest_transaction.awardee_or_recipient_legal AS recipient_name,
-        latest_transaction.ultimate_parent_unique_ide AS parent_recipient_unique_id,
+        LAST_VALUE(awardee_or_recipient_uniqu) over w AS recipient_unique_id, -- DUNS
+        LAST_VALUE(awardee_or_recipient_legal) over w AS recipient_name,
+        LAST_VALUE(ultimate_parent_unique_ide) over w AS parent_recipient_unique_id,
 
         -- executive compensation data
         exec_comp.high_comp_officer1_full_na AS officer_1_name,
@@ -435,9 +434,9 @@ FROM
         exec_comp.high_comp_officer5_amount AS officer_5_amount,
 
         -- business categories
-        latest_transaction.legal_entity_address_line1 AS recipient_location_address_line1,
-        latest_transaction.legal_entity_address_line2 AS recipient_location_address_line2,
-        latest_transaction.legal_entity_address_line3 AS recipient_location_address_line3,
+        LAST_VALUE(legal_entity_address_line1) over w AS recipient_location_address_line1,
+        LAST_VALUE(legal_entity_address_line2) over w AS recipient_location_address_line2,
+        LAST_VALUE(legal_entity_address_line3) over w AS recipient_location_address_line3,
 
         -- foreign province
         NULL::text AS recipient_location_foreign_province,
@@ -445,26 +444,26 @@ FROM
         NULL::text AS recipient_location_foreign_city_name,
 
         -- country
-        latest_transaction.legal_entity_country_code AS recipient_location_country_code,
-        latest_transaction.legal_entity_country_name AS recipient_location_country_name,
+        LAST_VALUE(legal_entity_country_code) over w AS recipient_location_country_code,
+        LAST_VALUE(legal_entity_country_name) over w AS recipient_location_country_name,
 
         -- state
-        latest_transaction.legal_entity_state_code AS recipient_location_state_code,
-        latest_transaction.legal_entity_state_descrip AS recipient_location_state_name,
+        LAST_VALUE(legal_entity_state_code) over w AS recipient_location_state_code,
+        LAST_VALUE(legal_entity_state_descrip) over w AS recipient_location_state_name,
 
         -- county
-        latest_transaction.legal_entity_county_code AS recipient_location_county_code,
-        latest_transaction.legal_entity_county_name AS recipient_location_county_name,
+        LAST_VALUE(legal_entity_county_code) over w AS recipient_location_county_code,
+        LAST_VALUE(legal_entity_county_name) over w AS recipient_location_county_name,
 
         -- city
         NULL::text AS recipient_location_city_code,
-        latest_transaction.legal_entity_city_name AS recipient_location_city_name,
+        LAST_VALUE(legal_entity_city_name) over w AS recipient_location_city_name,
 
         -- zip
-        latest_transaction.legal_entity_zip5 AS recipient_location_zip5,
+        LAST_VALUE(legal_entity_zip5) over w AS recipient_location_zip5,
 
         -- congressional disctrict
-        latest_transaction.legal_entity_congressional AS recipient_location_congressional_code,
+        LAST_VALUE(legal_entity_congressional) over w AS recipient_location_congressional_code,
 
         -- ppop data
         NULL::text AS pop_code,
@@ -473,31 +472,29 @@ FROM
         NULL::text AS pop_foreign_province,
 
         -- country
-        latest_transaction.place_of_perform_country_c AS pop_country_code,
-        latest_transaction.place_of_perf_country_desc AS pop_country_name,
+        LAST_VALUE(place_of_perform_country_c) over w AS pop_country_code,
+        LAST_VALUE(place_of_perf_country_desc) over w AS pop_country_name,
 
         -- state
-        latest_transaction.place_of_performance_state AS pop_state_code,
-        latest_transaction.place_of_perfor_state_desc AS pop_state_name,
+        LAST_VALUE(place_of_performance_state) over w AS pop_state_code,
+        LAST_VALUE(place_of_perfor_state_desc) over w AS pop_state_name,
 
         -- county
-        latest_transaction.place_of_perform_county_co AS pop_county_code,
-        latest_transaction.place_of_perform_county_na AS pop_county_name,
+        LAST_VALUE(place_of_perform_county_co) over w AS pop_county_code,
+        LAST_VALUE(place_of_perform_county_na) over w AS pop_county_name,
 
         -- city
-        latest_transaction.place_of_perform_city_name AS pop_city_name,
+        LAST_VALUE(place_of_perform_city_name) over w AS pop_city_name,
 
         -- zip
-        latest_transaction.place_of_performance_zip5 AS pop_zip5,
+        LAST_VALUE(place_of_performance_zip5) over w AS pop_zip5,
 
         -- congressional disctrict
-        latest_transaction.place_of_performance_congr AS pop_congressional_code
+        LAST_VALUE(place_of_performance_congr) over w AS pop_congressional_code
     FROM
-        detached_award_procurement tf
-        INNER JOIN
-        (SELECT * FROM detached_award_procurement AS tf_sub WHERE tf_sub.action_date = tf.certified_date AND tf_sub.piid = tf.piid AND tf_sub.parent_award_id = tf.parent_award_id AND tf_sub.agency_id = tf.agency_id AND tf_sub.referenced_idv_agency_iden = tf.referenced_idv_agency_iden) AS latest_transaction ON latest_transaction.detached_award_proc_unique = tf.detached_award_proc_unique
+        detached_award_procurement AS tf
         LEFT OUTER JOIN
-        exec_comp_lookup AS exec_comp ON exec_comp.awardee_or_recipient_uniqu = latest_transaction.awardee_or_recipient_uniqu
+        exec_comp_lookup AS exec_comp ON exec_comp.awardee_or_recipient_uniqu = LAST_VALUE(awardee_or_recipient_uniqu) over w
     window w AS (partition BY tf.piid, tf.parent_award_id, tf.agency_id, tf.referenced_idv_agency_iden)
     ORDER BY
         tf.piid,
@@ -922,18 +919,18 @@ FROM
         COALESCE(pafa.awarding_sub_tier_agency_c,''-NONE-'') || ''_'' ||
         COALESCE(pafa.fain, ''-NONE-'') || ''_'' ||
         ''-NONE-'' AS generated_unique_award_id,
-    latest_transaction.assistance_type AS type,
+    LAST_VALUE(assistance_type) over w AS type,
     CASE
-        WHEN latest_transaction.assistance_type = ''02'' THEN ''Block Grant''
-        WHEN latest_transaction.assistance_type = ''03'' THEN ''Formula Grant''
-        WHEN latest_transaction.assistance_type = ''04'' THEN ''Project Grant''
-        WHEN latest_transaction.assistance_type = ''05'' THEN ''Cooperative Agreement''
-        WHEN latest_transaction.assistance_type = ''06'' THEN ''Direct Payment for Specified Use''
-        WHEN latest_transaction.assistance_type = ''07'' THEN ''Direct Loan''
-        WHEN latest_transaction.assistance_type = ''08'' THEN ''Guaranteed/Insured Loan''
-        WHEN latest_transaction.assistance_type = ''09'' THEN ''Insurance''
-        WHEN latest_transaction.assistance_type = ''10'' THEN ''Direct Payment with Unrestricted Use''
-        WHEN latest_transaction.assistance_type = ''11'' THEN ''Other Financial Assistance''
+        WHEN LAST_VALUE(assistance_type) over w = ''02'' THEN ''Block Grant''
+        WHEN LAST_VALUE(assistance_type) over w = ''03'' THEN ''Formula Grant''
+        WHEN LAST_VALUE(assistance_type) over w = ''04'' THEN ''Project Grant''
+        WHEN LAST_VALUE(assistance_type) over w = ''05'' THEN ''Cooperative Agreement''
+        WHEN LAST_VALUE(assistance_type) over w = ''06'' THEN ''Direct Payment for Specified Use''
+        WHEN LAST_VALUE(assistance_type) over w = ''07'' THEN ''Direct Loan''
+        WHEN LAST_VALUE(assistance_type) over w = ''08'' THEN ''Guaranteed/Insured Loan''
+        WHEN LAST_VALUE(assistance_type) over w = ''09'' THEN ''Insurance''
+        WHEN LAST_VALUE(assistance_type) over w = ''10'' THEN ''Direct Payment with Unrestricted Use''
+        WHEN LAST_VALUE(assistance_type) over w = ''11'' THEN ''Other Financial Assistance''
     END AS type_description,
     NULL::text AS agency_id,
     NULL::text AS referenced_idv_agency_iden,
@@ -944,36 +941,36 @@ FROM
     NULL::text AS type_of_idc_description,
     NULL::text AS piid,
     NULL::text AS parent_award_piid,
-    latest_transaction.fain AS fain,
+    LAST_VALUE(fain) over w AS fain,
     NULL::text AS uri,
     SUM(COALESCE(pafa.federal_action_obligation::NUMERIC, 0::NUMERIC)) over w AS total_obligation,
     SUM(COALESCE(pafa.original_loan_subsidy_cost::NUMERIC, 0::NUMERIC)) over w AS total_subsidy_cost,
     SUM(COALESCE(pafa.face_value_loan_guarantee::NUMERIC, 0::NUMERIC)) over w AS total_loan_value,
     NULL::NUMERIC AS total_outlay,
-    latest_transaction.awarding_agency_code AS awarding_agency_code,
-    latest_transaction.awarding_agency_name AS awarding_agency_name,
-    latest_transaction.awarding_sub_tier_agency_c AS awarding_sub_tier_agency_c,
-    latest_transaction.awarding_sub_tier_agency_n AS awarding_sub_tier_agency_n,
-    latest_transaction.awarding_office_code AS awarding_office_code,
-    latest_transaction.awarding_office_name AS awarding_office_name,
-    latest_transaction.funding_agency_code AS funding_agency_code,
-    latest_transaction.funding_agency_name AS funding_agency_name,
-    latest_transaction.funding_sub_tier_agency_co AS funding_sub_tier_agency_co,
-    latest_transaction.funding_sub_tier_agency_na AS funding_sub_tier_agency_na,
-    latest_transaction.funding_office_code AS funding_office_code,
-    latest_transaction.funding_office_name AS funding_office_name,
-    NULLIF(latest_transaction.action_date, '''')::DATE AS action_date,
+    LAST_VALUE(awarding_agency_code) over w AS awarding_agency_code,
+    LAST_VALUE(awarding_agency_name) over w AS awarding_agency_name,
+    LAST_VALUE(awarding_sub_tier_agency_c) over w AS awarding_sub_tier_agency_c,
+    LAST_VALUE(awarding_sub_tier_agency_n) over w AS awarding_sub_tier_agency_n,
+    LAST_VALUE(awarding_office_code) over w AS awarding_office_code,
+    LAST_VALUE(awarding_office_name) over w AS awarding_office_name,
+    LAST_VALUE(funding_agency_code) over w AS funding_agency_code,
+    LAST_VALUE(funding_agency_name) over w AS funding_agency_name,
+    LAST_VALUE(funding_sub_tier_agency_co) over w AS funding_sub_tier_agency_co,
+    LAST_VALUE(funding_sub_tier_agency_na) over w AS funding_sub_tier_agency_na,
+    LAST_VALUE(funding_office_code) over w AS funding_office_code,
+    LAST_VALUE(funding_office_name) over w AS funding_office_name,
+    NULLIF(LAST_VALUE(action_date) over w, '''')::DATE AS action_date,
     MIN(NULLIF(pafa.action_date, '''')::DATE) over w AS date_signed,
-    latest_transaction.award_description AS description,
+    LAST_VALUE(award_description) over w AS description,
     -- TODO: Handle when period_of_performance_star/period_of_performance_curr is ''
     MIN(NULLIF(pafa.period_of_performance_star, '''')::DATE) over w AS period_of_performance_start_date,
     MAX(NULLIF(pafa.period_of_performance_curr, '''')::DATE) over w AS period_of_performance_current_end_date,
     NULL::NUMERIC AS potential_total_value_of_award,
     NULL::NUMERIC AS base_and_all_options_value,
-    latest_transaction.modified_at::DATE AS last_modified_date,
+    LAST_VALUE(modified_at::DATE) over w AS last_modified_date,
     MAX(NULLIF(pafa.action_date, '''')::DATE) over w AS certified_date,
-    latest_transaction.record_type AS record_type,
-    latest_transaction.afa_generated_unique AS latest_transaction_unique_id,
+    LAST_VALUE(record_type) over w AS record_type,
+    LAST_VALUE(afa_generated_unique) over w AS latest_transaction_unique_id,
     0 AS total_subaward_amount,
     0 AS subaward_count,
     NULL::text AS pulled_from,
@@ -1042,44 +1039,44 @@ FROM
     NULL::text AS idv_type_description,
     NULL::text AS type_set_aside,
     NULL::text AS type_set_aside_description,
-    latest_transaction.assistance_type AS assistance_type,
-    latest_transaction.business_funds_indicator AS business_funds_indicator,
-    latest_transaction.business_types AS business_types,
+    LAST_VALUE(assistance_type) over w AS assistance_type,
+    LAST_VALUE(business_funds_indicator) over w AS business_funds_indicator,
+    LAST_VALUE(business_types) over w AS business_types,
     CASE
-        WHEN UPPER(latest_transaction.business_types) = ''A'' THEN ''State government''
-        WHEN UPPER(latest_transaction.business_types) = ''B'' THEN ''County Government''
-        WHEN UPPER(latest_transaction.business_types) = ''C'' THEN ''City or Township Government''
-        WHEN UPPER(latest_transaction.business_types) = ''D'' THEN ''Special District Government''
-        WHEN UPPER(latest_transaction.business_types) = ''E'' THEN ''Regional Organization''
-        WHEN UPPER(latest_transaction.business_types) = ''F'' THEN ''U.S. Territory or Possession''
-        WHEN UPPER(latest_transaction.business_types) = ''G'' THEN ''Independent School District''
-        WHEN UPPER(latest_transaction.business_types) = ''H'' THEN ''Public/State Controlled Institution of Higher Education''
-        WHEN UPPER(latest_transaction.business_types) = ''I'' THEN ''Indian/Native American Tribal Government (Federally Recognized)''
-        WHEN UPPER(latest_transaction.business_types) = ''J'' THEN ''Indian/Native American Tribal Government (Other than Federally Recognized)''
-        WHEN UPPER(latest_transaction.business_types) = ''K'' THEN ''Indian/Native American Tribal Designated Organization''
-        WHEN UPPER(latest_transaction.business_types) = ''L'' THEN ''Public/Indian Housing Authority''
-        WHEN UPPER(latest_transaction.business_types) = ''M'' THEN ''Nonprofit with 501(c)(3) IRS Status (Other than Institution of Higher Education)''
-        WHEN UPPER(latest_transaction.business_types) = ''N'' THEN ''Nonprofit without 501(c)(3) IRS Status (Other than Institution of Higher Education)''
-        WHEN UPPER(latest_transaction.business_types) = ''O'' THEN ''Private Institution of Higher Education''
-        WHEN UPPER(latest_transaction.business_types) = ''P'' THEN ''Individual''
-        WHEN UPPER(latest_transaction.business_types) = ''Q'' THEN ''For-Profit Organization (Other than Small Business)''
-        WHEN UPPER(latest_transaction.business_types) = ''R'' THEN ''Small Business''
-        WHEN UPPER(latest_transaction.business_types) = ''S'' THEN ''Hispanic-serving Institution''
-        WHEN UPPER(latest_transaction.business_types) = ''T'' THEN ''Historically Black Colleges and Universities (HBCUs)''
-        WHEN UPPER(latest_transaction.business_types) = ''U'' THEN ''Tribally Controlled Colleges and Universities (TCCUs)''
-        WHEN UPPER(latest_transaction.business_types) = ''V'' THEN ''Alaska Native and Native Hawaiian Serving Institutions''
-        WHEN UPPER(latest_transaction.business_types) = ''W'' THEN ''Non-domestic (non-US) Entity''
-        WHEN UPPER(latest_transaction.business_types) = ''X'' THEN ''Other''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''A'' THEN ''State government''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''B'' THEN ''County Government''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''C'' THEN ''City or Township Government''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''D'' THEN ''Special District Government''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''E'' THEN ''Regional Organization''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''F'' THEN ''U.S. Territory or Possession''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''G'' THEN ''Independent School District''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''H'' THEN ''Public/State Controlled Institution of Higher Education''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''I'' THEN ''Indian/Native American Tribal Government (Federally Recognized)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''J'' THEN ''Indian/Native American Tribal Government (Other than Federally Recognized)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''K'' THEN ''Indian/Native American Tribal Designated Organization''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''L'' THEN ''Public/Indian Housing Authority''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''M'' THEN ''Nonprofit with 501(c)(3) IRS Status (Other than Institution of Higher Education)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''N'' THEN ''Nonprofit without 501(c)(3) IRS Status (Other than Institution of Higher Education)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''O'' THEN ''Private Institution of Higher Education''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''P'' THEN ''Individual''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''Q'' THEN ''For-Profit Organization (Other than Small Business)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''R'' THEN ''Small Business''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''S'' THEN ''Hispanic-serving Institution''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''T'' THEN ''Historically Black Colleges and Universities (HBCUs)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''U'' THEN ''Tribally Controlled Colleges and Universities (TCCUs)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''V'' THEN ''Alaska Native and Native Hawaiian Serving Institutions''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''W'' THEN ''Non-domestic (non-US) Entity''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''X'' THEN ''Other''
         ELSE ''Unknown Types''
     END AS business_types_description,
-    compile_fabs_business_categories(latest_transaction.business_types) AS business_categories,
-    latest_transaction.cfda_number AS cfda_number,
-    latest_transaction.cfda_title AS cfda_title,
-    latest_transaction.sai_number AS sai_number,
+    compile_fabs_business_categories(LAST_VALUE(business_types) over w) AS business_categories,
+    LAST_VALUE(cfda_number) over w AS cfda_number,
+    LAST_VALUE(cfda_title) over w AS cfda_title,
+    LAST_VALUE(sai_number) over w AS sai_number,
 
     -- recipient data
-    latest_transaction.awardee_or_recipient_uniqu AS recipient_unique_id,
-    latest_transaction.awardee_or_recipient_legal AS recipient_name,
+    LAST_VALUE(awardee_or_recipient_uniqu) over w AS recipient_unique_id,
+    LAST_VALUE(awardee_or_recipient_legal) over w AS recipient_name,
     NULL::text AS parent_recipient_unique_id,
 
     -- executive compensation data
@@ -1095,69 +1092,67 @@ FROM
     exec_comp.high_comp_officer5_amount AS officer_5_amount,
 
     -- business categories
-    latest_transaction.legal_entity_address_line1 AS recipient_location_address_line1,
-    latest_transaction.legal_entity_address_line2 AS recipient_location_address_line2,
-    latest_transaction.legal_entity_address_line3 AS recipient_location_address_line3,
+    LAST_VALUE(legal_entity_address_line1) over w AS recipient_location_address_line1,
+    LAST_VALUE(legal_entity_address_line2) over w AS recipient_location_address_line2,
+    LAST_VALUE(legal_entity_address_line3) over w AS recipient_location_address_line3,
 
     -- foreign province
-    latest_transaction.legal_entity_foreign_provi AS recipient_location_foreign_province,
-    latest_transaction.legal_entity_foreign_city AS recipient_location_foreign_city_name,
-    latest_transaction.legal_entity_foreign_posta AS recipient_location_foreign_postal_code,
+    LAST_VALUE(legal_entity_foreign_provi) over w AS recipient_location_foreign_province,
+    LAST_VALUE(legal_entity_foreign_city) over w AS recipient_location_foreign_city_name,
+    LAST_VALUE(legal_entity_foreign_posta) over w AS recipient_location_foreign_postal_code,
 
     -- country
-    latest_transaction.legal_entity_country_code AS recipient_location_country_code,
-    latest_transaction.legal_entity_country_name AS recipient_location_country_name,
+    LAST_VALUE(legal_entity_country_code) over w AS recipient_location_country_code,
+    LAST_VALUE(legal_entity_country_name) over w AS recipient_location_country_name,
 
     -- state
-    latest_transaction.legal_entity_state_code AS recipient_location_state_code,
-    latest_transaction.legal_entity_state_name AS recipient_location_state_name,
+    LAST_VALUE(legal_entity_state_code) over w AS recipient_location_state_code,
+    LAST_VALUE(legal_entity_state_name) over w AS recipient_location_state_name,
 
     -- county
-    latest_transaction.legal_entity_county_code AS recipient_location_county_code,
-    latest_transaction.legal_entity_county_name AS recipient_location_county_name,
+    LAST_VALUE(legal_entity_county_code) over w AS recipient_location_county_code,
+    LAST_VALUE(legal_entity_county_name) over w AS recipient_location_county_name,
 
     -- city
-    latest_transaction.legal_entity_city_code AS recipient_location_city_code,
-    latest_transaction.legal_entity_city_name AS recipient_location_city_name,
+    LAST_VALUE(legal_entity_city_code) over w AS recipient_location_city_code,
+    LAST_VALUE(legal_entity_city_name) over w AS recipient_location_city_name,
 
     -- zip
-    latest_transaction.legal_entity_zip5 AS recipient_location_zip5,
+    LAST_VALUE(legal_entity_zip5) over w AS recipient_location_zip5,
 
     -- congressional disctrict
-    latest_transaction.legal_entity_congressional AS recipient_location_congressional_code,
+    LAST_VALUE(legal_entity_congressional) over w AS recipient_location_congressional_code,
 
     -- ppop data
-    latest_transaction.place_of_performance_code AS pop_code,
+    LAST_VALUE(place_of_performance_code) over w AS pop_code,
 
     -- foreign
-    latest_transaction.place_of_performance_forei AS pop_foreign_province,
+    LAST_VALUE(place_of_performance_forei) over w AS pop_foreign_province,
 
     -- country
-    latest_transaction.place_of_perform_country_c AS pop_country_code,
-    latest_transaction.place_of_perform_country_n AS pop_country_name,
+    LAST_VALUE(place_of_perform_country_c) over w AS pop_country_code,
+    LAST_VALUE(place_of_perform_country_n) over w AS pop_country_name,
 
     -- state
-    latest_transaction.place_of_perfor_state_code AS pop_state_code,
-    latest_transaction.place_of_perform_state_nam AS pop_state_name,
+    LAST_VALUE(place_of_perfor_state_code) over w AS pop_state_code,
+    LAST_VALUE(place_of_perform_state_nam) over w AS pop_state_name,
 
     -- county
-    latest_transaction.place_of_perform_county_co AS pop_county_code,
-    latest_transaction.place_of_perform_county_na AS pop_county_name,
+    LAST_VALUE(place_of_perform_county_co) over w AS pop_county_code,
+    LAST_VALUE(place_of_perform_county_na) over w AS pop_county_name,
 
     -- city
-    latest_transaction.place_of_performance_city AS pop_city_name,
+    LAST_VALUE(place_of_performance_city) over w AS pop_city_name,
 
     -- zip
-    latest_transaction.place_of_performance_zip5 AS pop_zip5,
+    LAST_VALUE(place_of_performance_zip5) over w AS pop_zip5,
 
     -- congressional disctrict
-    latest_transaction.place_of_performance_congr AS pop_congressional_code
+    LAST_VALUE(place_of_performance_congr) over w AS pop_congressional_code
 
 FROM published_award_financial_assistance AS pafa
-    INNER JOIN
-    (SELECT * FROM published_award_financial_assistance AS pafa_sub WHERE pafa_sub.action_date = pafa.certified_date AND pafa_sub.fain = pafa.fain AND pafa_sub.awarding_sub_tier_agency_c = pafa.awarding_sub_tier_agency_c) AS latest_transaction ON latest_transaction.afa_generated_unique = pafa.afa_generated_unique
     LEFT OUTER JOIN
-    exec_comp_lookup AS exec_comp ON exec_comp.awardee_or_recipient_uniqu = latest_transaction.awardee_or_recipient_uniqu
+    exec_comp_lookup AS exec_comp ON exec_comp.awardee_or_recipient_uniqu = LAST_VALUE(awardee_or_recipient_uniqu) over w
 WHERE pafa.record_type = ''2'' AND is_active=TRUE
 window w AS (partition BY pafa.fain, pafa.awarding_sub_tier_agency_c)
 ORDER BY
@@ -1583,18 +1578,18 @@ FROM
         COALESCE(pafa.awarding_sub_tier_agency_c,''-NONE-'') || ''_'' ||
         ''-NONE-'' || ''_'' ||
         COALESCE(pafa.uri, ''-NONE-'') AS generated_unique_award_id,
-    latest_transaction.assistance_type AS type,
+    LAST_VALUE(assistance_type) over w AS type,
     CASE
-        WHEN latest_transaction.assistance_type = ''02'' THEN ''Block Grant''
-        WHEN latest_transaction.assistance_type = ''03'' THEN ''Formula Grant''
-        WHEN latest_transaction.assistance_type = ''04'' THEN ''Project Grant''
-        WHEN latest_transaction.assistance_type = ''05'' THEN ''Cooperative Agreement''
-        WHEN latest_transaction.assistance_type = ''06'' THEN ''Direct Payment for Specified Use''
-        WHEN latest_transaction.assistance_type = ''07'' THEN ''Direct Loan''
-        WHEN latest_transaction.assistance_type = ''08'' THEN ''Guaranteed/Insured Loan''
-        WHEN latest_transaction.assistance_type = ''09'' THEN ''Insurance''
-        WHEN latest_transaction.assistance_type = ''10'' THEN ''Direct Payment with Unrestricted Use''
-        WHEN latest_transaction.assistance_type = ''11'' THEN ''Other Financial Assistance''
+        WHEN LAST_VALUE(assistance_type) over w = ''02'' THEN ''Block Grant''
+        WHEN LAST_VALUE(assistance_type) over w = ''03'' THEN ''Formula Grant''
+        WHEN LAST_VALUE(assistance_type) over w = ''04'' THEN ''Project Grant''
+        WHEN LAST_VALUE(assistance_type) over w = ''05'' THEN ''Cooperative Agreement''
+        WHEN LAST_VALUE(assistance_type) over w = ''06'' THEN ''Direct Payment for Specified Use''
+        WHEN LAST_VALUE(assistance_type) over w = ''07'' THEN ''Direct Loan''
+        WHEN LAST_VALUE(assistance_type) over w = ''08'' THEN ''Guaranteed/Insured Loan''
+        WHEN LAST_VALUE(assistance_type) over w = ''09'' THEN ''Insurance''
+        WHEN LAST_VALUE(assistance_type) over w = ''10'' THEN ''Direct Payment with Unrestricted Use''
+        WHEN LAST_VALUE(assistance_type) over w = ''11'' THEN ''Other Financial Assistance''
     END AS type_description,
     NULL::text AS agency_id,
     NULL::text AS referenced_idv_agency_iden,
@@ -1606,35 +1601,35 @@ FROM
     NULL::text AS piid,
     NULL::text AS parent_award_piid,
     NULL::text AS fain,
-    latest_transaction.uri AS uri,
+    LAST_VALUE(uri) over w AS uri,
     SUM(COALESCE(pafa.federal_action_obligation::NUMERIC, 0::NUMERIC)) over w AS total_obligation,
     SUM(COALESCE(pafa.original_loan_subsidy_cost::NUMERIC, 0::NUMERIC)) over w AS total_subsidy_cost,
     SUM(COALESCE(pafa.face_value_loan_guarantee::NUMERIC, 0::NUMERIC)) over w AS total_loan_value,
     NULL::NUMERIC AS total_outlay,
-    latest_transaction.awarding_agency_code AS awarding_agency_code,
-    latest_transaction.awarding_agency_name AS awarding_agency_name,
-    latest_transaction.awarding_sub_tier_agency_c AS awarding_sub_tier_agency_c,
-    latest_transaction.awarding_sub_tier_agency_n AS awarding_sub_tier_agency_n,
-    latest_transaction.awarding_office_code AS awarding_office_code,
-    latest_transaction.awarding_office_name AS awarding_office_name,
-    latest_transaction.funding_agency_code AS funding_agency_code,
-    latest_transaction.funding_agency_name AS funding_agency_name,
-    latest_transaction.funding_sub_tier_agency_co AS funding_sub_tier_agency_co,
-    latest_transaction.funding_sub_tier_agency_na AS funding_sub_tier_agency_na,
-    latest_transaction.funding_office_code AS funding_office_code,
-    latest_transaction.funding_office_name AS funding_office_name,
-    NULLIF(latest_transaction.action_date, '''')::DATE AS action_date,
+    LAST_VALUE(awarding_agency_code) over w AS awarding_agency_code,
+    LAST_VALUE(awarding_agency_name) over w AS awarding_agency_name,
+    LAST_VALUE(awarding_sub_tier_agency_c) over w AS awarding_sub_tier_agency_c,
+    LAST_VALUE(awarding_sub_tier_agency_n) over w AS awarding_sub_tier_agency_n,
+    LAST_VALUE(awarding_office_code) over w AS awarding_office_code,
+    LAST_VALUE(awarding_office_name) over w AS awarding_office_name,
+    LAST_VALUE(funding_agency_code) over w AS funding_agency_code,
+    LAST_VALUE(funding_agency_name) over w AS funding_agency_name,
+    LAST_VALUE(funding_sub_tier_agency_co) over w AS funding_sub_tier_agency_co,
+    LAST_VALUE(funding_sub_tier_agency_na) over w AS funding_sub_tier_agency_na,
+    LAST_VALUE(funding_office_code) over w AS funding_office_code,
+    LAST_VALUE(funding_office_name) over w AS funding_office_name,
+    NULLIF(LAST_VALUE(action_date) over w, '''')::DATE AS action_date,
     MIN(NULLIF(pafa.action_date, '''')::DATE) over w AS date_signed,
-    latest_transaction.award_description AS description,
+    LAST_VALUE(award_description) over w AS description,
     -- TODO: Handle when period_of_performance_star/period_of_performance_curr is ''
     MIN(NULLIF(pafa.period_of_performance_star, '''')::DATE) over w AS period_of_performance_start_date,
     MAX(NULLIF(pafa.period_of_performance_curr, '''')::DATE) over w AS period_of_performance_current_end_date,
     NULL::NUMERIC AS potential_total_value_of_award,
     NULL::NUMERIC AS base_and_all_options_value,
-    latest_transaction.modified_at::DATE AS last_modified_date,
+    LAST_VALUE(modified_at::DATE) over w AS last_modified_date,
     MAX(NULLIF(pafa.action_date, '''')::DATE) over w AS certified_date,
-    latest_transaction.record_type AS record_type,
-    latest_transaction.afa_generated_unique AS latest_transaction_unique_id,
+    LAST_VALUE(record_type) over w AS record_type,
+    LAST_VALUE(afa_generated_unique) over w AS latest_transaction_unique_id,
     0 AS total_subaward_amount,
     0 AS subaward_count,
     NULL::text AS pulled_from,
@@ -1703,44 +1698,44 @@ FROM
     NULL::text AS idv_type_description,
     NULL::text AS type_set_aside,
     NULL::text AS type_set_aside_description,
-    latest_transaction.assistance_type AS assistance_type,
-    latest_transaction.business_funds_indicator AS business_funds_indicator,
-    latest_transaction.business_types AS business_types,
+    LAST_VALUE(assistance_type) over w AS assistance_type,
+    LAST_VALUE(business_funds_indicator) over w AS business_funds_indicator,
+    LAST_VALUE(business_types) over w AS business_types,
     CASE
-        WHEN UPPER(latest_transaction.business_types) = ''A'' THEN ''State government''
-        WHEN UPPER(latest_transaction.business_types) = ''B'' THEN ''County Government''
-        WHEN UPPER(latest_transaction.business_types) = ''C'' THEN ''City or Township Government''
-        WHEN UPPER(latest_transaction.business_types) = ''D'' THEN ''Special District Government''
-        WHEN UPPER(latest_transaction.business_types) = ''E'' THEN ''Regional Organization''
-        WHEN UPPER(latest_transaction.business_types) = ''F'' THEN ''U.S. Territory or Possession''
-        WHEN UPPER(latest_transaction.business_types) = ''G'' THEN ''Independent School District''
-        WHEN UPPER(latest_transaction.business_types) = ''H'' THEN ''Public/State Controlled Institution of Higher Education''
-        WHEN UPPER(latest_transaction.business_types) = ''I'' THEN ''Indian/Native American Tribal Government (Federally Recognized)''
-        WHEN UPPER(latest_transaction.business_types) = ''J'' THEN ''Indian/Native American Tribal Government (Other than Federally Recognized)''
-        WHEN UPPER(latest_transaction.business_types) = ''K'' THEN ''Indian/Native American Tribal Designated Organization''
-        WHEN UPPER(latest_transaction.business_types) = ''L'' THEN ''Public/Indian Housing Authority''
-        WHEN UPPER(latest_transaction.business_types) = ''M'' THEN ''Nonprofit with 501(c)(3) IRS Status (Other than Institution of Higher Education)''
-        WHEN UPPER(latest_transaction.business_types) = ''N'' THEN ''Nonprofit without 501(c)(3) IRS Status (Other than Institution of Higher Education)''
-        WHEN UPPER(latest_transaction.business_types) = ''O'' THEN ''Private Institution of Higher Education''
-        WHEN UPPER(latest_transaction.business_types) = ''P'' THEN ''Individual''
-        WHEN UPPER(latest_transaction.business_types) = ''Q'' THEN ''For-Profit Organization (Other than Small Business)''
-        WHEN UPPER(latest_transaction.business_types) = ''R'' THEN ''Small Business''
-        WHEN UPPER(latest_transaction.business_types) = ''S'' THEN ''Hispanic-serving Institution''
-        WHEN UPPER(latest_transaction.business_types) = ''T'' THEN ''Historically Black Colleges and Universities (HBCUs)''
-        WHEN UPPER(latest_transaction.business_types) = ''U'' THEN ''Tribally Controlled Colleges and Universities (TCCUs)''
-        WHEN UPPER(latest_transaction.business_types) = ''V'' THEN ''Alaska Native and Native Hawaiian Serving Institutions''
-        WHEN UPPER(latest_transaction.business_types) = ''W'' THEN ''Non-domestic (non-US) Entity''
-        WHEN UPPER(latest_transaction.business_types) = ''X'' THEN ''Other''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''A'' THEN ''State government''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''B'' THEN ''County Government''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''C'' THEN ''City or Township Government''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''D'' THEN ''Special District Government''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''E'' THEN ''Regional Organization''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''F'' THEN ''U.S. Territory or Possession''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''G'' THEN ''Independent School District''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''H'' THEN ''Public/State Controlled Institution of Higher Education''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''I'' THEN ''Indian/Native American Tribal Government (Federally Recognized)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''J'' THEN ''Indian/Native American Tribal Government (Other than Federally Recognized)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''K'' THEN ''Indian/Native American Tribal Designated Organization''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''L'' THEN ''Public/Indian Housing Authority''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''M'' THEN ''Nonprofit with 501(c)(3) IRS Status (Other than Institution of Higher Education)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''N'' THEN ''Nonprofit without 501(c)(3) IRS Status (Other than Institution of Higher Education)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''O'' THEN ''Private Institution of Higher Education''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''P'' THEN ''Individual''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''Q'' THEN ''For-Profit Organization (Other than Small Business)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''R'' THEN ''Small Business''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''S'' THEN ''Hispanic-serving Institution''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''T'' THEN ''Historically Black Colleges and Universities (HBCUs)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''U'' THEN ''Tribally Controlled Colleges and Universities (TCCUs)''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''V'' THEN ''Alaska Native and Native Hawaiian Serving Institutions''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''W'' THEN ''Non-domestic (non-US) Entity''
+        WHEN UPPER(LAST_VALUE(business_types) over w) = ''X'' THEN ''Other''
         ELSE ''Unknown Types''
     END AS business_types_description,
-    compile_fabs_business_categories(latest_transaction.business_types) AS business_categories,
-    latest_transaction.cfda_number AS cfda_number,
-    latest_transaction.cfda_title AS cfda_title,
-    latest_transaction.sai_number AS sai_number,
+    compile_fabs_business_categories(LAST_VALUE(business_types) over w) AS business_categories,
+    LAST_VALUE(cfda_number) over w AS cfda_number,
+    LAST_VALUE(cfda_title) over w AS cfda_title,
+    LAST_VALUE(sai_number) over w AS sai_number,
 
     -- recipient data
-    latest_transaction.awardee_or_recipient_uniqu AS recipient_unique_id,
-    latest_transaction.awardee_or_recipient_legal AS recipient_name,
+    LAST_VALUE(awardee_or_recipient_uniqu) over w AS recipient_unique_id,
+    LAST_VALUE(awardee_or_recipient_legal) over w AS recipient_name,
     NULL::text AS parent_recipient_unique_id,
 
     -- executive compensation data
@@ -1756,69 +1751,67 @@ FROM
     exec_comp.high_comp_officer5_amount AS officer_5_amount,
 
     -- business categories
-    latest_transaction.legal_entity_address_line1 AS recipient_location_address_line1,
-    latest_transaction.legal_entity_address_line2 AS recipient_location_address_line2,
-    latest_transaction.legal_entity_address_line3 AS recipient_location_address_line3,
+    LAST_VALUE(legal_entity_address_line1) over w AS recipient_location_address_line1,
+    LAST_VALUE(legal_entity_address_line2) over w AS recipient_location_address_line2,
+    LAST_VALUE(legal_entity_address_line3) over w AS recipient_location_address_line3,
 
     -- foreign province
-    latest_transaction.legal_entity_foreign_provi AS recipient_location_foreign_province,
-    latest_transaction.legal_entity_foreign_city AS recipient_location_foreign_city_name,
-    latest_transaction.legal_entity_foreign_posta AS recipient_location_foreign_postal_code,
+    LAST_VALUE(legal_entity_foreign_provi) over w AS recipient_location_foreign_province,
+    LAST_VALUE(legal_entity_foreign_city) over w AS recipient_location_foreign_city_name,
+    LAST_VALUE(legal_entity_foreign_posta) over w AS recipient_location_foreign_postal_code,
 
     -- country
-    latest_transaction.legal_entity_country_code AS recipient_location_country_code,
-    latest_transaction.legal_entity_country_name AS recipient_location_country_name,
+    LAST_VALUE(legal_entity_country_code) over w AS recipient_location_country_code,
+    LAST_VALUE(legal_entity_country_name) over w AS recipient_location_country_name,
 
     -- state
-    latest_transaction.legal_entity_state_code AS recipient_location_state_code,
-    latest_transaction.legal_entity_state_name AS recipient_location_state_name,
+    LAST_VALUE(legal_entity_state_code) over w AS recipient_location_state_code,
+    LAST_VALUE(legal_entity_state_name) over w AS recipient_location_state_name,
 
     -- county
-    latest_transaction.legal_entity_county_code AS recipient_location_county_code,
-    latest_transaction.legal_entity_county_name AS recipient_location_county_name,
+    LAST_VALUE(legal_entity_county_code) over w AS recipient_location_county_code,
+    LAST_VALUE(legal_entity_county_name) over w AS recipient_location_county_name,
 
     -- city
-    latest_transaction.legal_entity_city_code AS recipient_location_city_code,
-    latest_transaction.legal_entity_city_name AS recipient_location_city_name,
+    LAST_VALUE(legal_entity_city_code) over w AS recipient_location_city_code,
+    LAST_VALUE(legal_entity_city_name) over w AS recipient_location_city_name,
 
     -- zip
-    latest_transaction.legal_entity_zip5 AS recipient_location_zip5,
+    LAST_VALUE(legal_entity_zip5) over w AS recipient_location_zip5,
 
     -- congressional disctrict
-    latest_transaction.legal_entity_congressional AS recipient_location_congressional_code,
+    LAST_VALUE(legal_entity_congressional) over w AS recipient_location_congressional_code,
 
     -- ppop data
-    latest_transaction.place_of_performance_code AS pop_code,
+    LAST_VALUE(place_of_performance_code) over w AS pop_code,
 
     -- foreign
-    place_of_performance_forei AS pop_foreign_province,
+    LAST_VALUE(place_of_performance_forei) over w AS pop_foreign_province,
 
     -- country
-    latest_transaction.place_of_perform_country_c AS pop_country_code,
-    latest_transaction.place_of_perform_country_n AS pop_country_name,
+    LAST_VALUE(place_of_perform_country_c) over w AS pop_country_code,
+    LAST_VALUE(place_of_perform_country_n) over w AS pop_country_name,
 
     -- state
-    latest_transaction.place_of_perfor_state_code AS pop_state_code,
-    latest_transaction.place_of_perform_state_nam AS pop_state_name,
+    LAST_VALUE(place_of_perfor_state_code) over w AS pop_state_code,
+    LAST_VALUE(place_of_perform_state_nam) over w AS pop_state_name,
 
     -- county
-    latest_transaction.place_of_perform_county_co AS pop_county_code,
-    latest_transaction.place_of_perform_county_na AS pop_county_name,
+    LAST_VALUE(place_of_perform_county_co) over w AS pop_county_code,
+    LAST_VALUE(place_of_perform_county_na) over w AS pop_county_name,
 
     -- city
-    latest_transaction.place_of_performance_city AS pop_city_name,
+    LAST_VALUE(place_of_performance_city) over w AS pop_city_name,
 
     -- zip
-    latest_transaction.place_of_performance_zip5 AS pop_zip5,
+    LAST_VALUE(place_of_performance_zip5) over w AS pop_zip5,
 
     -- congressional disctrict
-    latest_transaction.place_of_performance_congr AS pop_congressional_code
+    LAST_VALUE(place_of_performance_congr) over w AS pop_congressional_code
 
 FROM published_award_financial_assistance AS pafa
-    INNER JOIN
-    (SELECT * FROM published_award_financial_assistance AS pafa_sub WHERE pafa_sub.action_date = pafa.certified_date AND pafa_sub.uri = pafa.uri AND pafa_sub.awarding_sub_tier_agency_c = pafa.awarding_sub_tier_agency_c) AS latest_transaction ON latest_transaction.afa_generated_unique = pafa.afa_generated_unique
     LEFT OUTER JOIN
-    exec_comp_lookup AS exec_comp ON exec_comp.awardee_or_recipient_uniqu = latest_transaction.awardee_or_recipient_uniqu
+    exec_comp_lookup AS exec_comp ON exec_comp.awardee_or_recipient_uniqu = LAST_VALUE(awardee_or_recipient_uniqu) over w
 WHERE pafa.record_type = ''1'' AND is_active=TRUE
 window w AS (partition BY pafa.uri, pafa.awarding_sub_tier_agency_c)
 ORDER BY
