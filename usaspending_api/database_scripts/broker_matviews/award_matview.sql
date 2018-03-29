@@ -225,7 +225,7 @@ FROM
         LAST_VALUE(piid) over w AS piid,
         LAST_VALUE(parent_award_id) over w AS parent_award_piid,
         NULL::text AS fain,
-        NULL::text AS uri,) over w
+        NULL::text AS uri,
         SUM(COALESCE(tf.federal_action_obligation::NUMERIC, 0::NUMERIC)) over w AS total_obligation,
         NULL::NUMERIC AS total_subsidy_cost,
         NULL::NUMERIC AS total_loan_value,
