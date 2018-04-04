@@ -1,4 +1,5 @@
 DROP MATERIALIZED VIEW IF EXISTS award_matview_new;
+DROP MATERIALIZED VIEW IF EXISTS award_matview_old;
 
 CREATE MATERIALIZED VIEW award_matview_new AS (
 (SELECT
@@ -1937,7 +1938,7 @@ ORDER BY
         cfda_number text,
         cfda_title text,
         sai_number text,
-        
+
         -- recipient data
         recipient_unique_id text, -- DUNS
         recipient_name text,
@@ -1959,24 +1960,24 @@ ORDER BY
         recipient_location_address_line1 text,
         recipient_location_address_line2 text,
         recipient_location_address_line3 text,
-        
+
         -- foreign province
         recipient_location_foreign_province text,
         recipient_location_foreign_city_name text,
         recipient_location_foreign_postal_code text,
-        
+
         -- country
         recipient_location_country_code text,
         recipient_location_country_name text,
-        
+
         -- state
         recipient_location_state_code text,
         recipient_location_state_name text,
-        
+
         -- county (NONE FOR FPDS)
         recipient_location_county_code text,
         recipient_location_county_name text,
-        
+
         -- city
         recipient_location_city_code text,
         recipient_location_city_name text,
@@ -1986,28 +1987,28 @@ ORDER BY
 
         -- congressional disctrict
         recipient_location_congressional_code text,
-        
+
         -- ppop data
         pop_code text,
-        
+
         -- foreign
         pop_foreign_province text,
-        
+
         -- country
         pop_country_code text,
         pop_country_name text,
-        
+
         -- state
         pop_state_code text,
         pop_state_name text,
-        
+
         -- county
         pop_county_code text,
         pop_county_name text,
-        
+
         -- city
         pop_city_name text,
-        
+
         -- zip
         pop_zip5 text,
 
@@ -2026,6 +2027,6 @@ ORDER BY
 
 BEGIN;
 ALTER MATERIALIZED VIEW IF EXISTS award_matview RENAME TO award_matview_old;
-ALTER MATERIALIZED VIEW IF EXISTS award_matview_new RENAME TO award_matview;
+ALTER MATERIALIZED VIEW award_matview_new RENAME TO award_matview;
 DROP MATERIALIZED VIEW IF EXISTS award_matview_old;
 COMMIT;

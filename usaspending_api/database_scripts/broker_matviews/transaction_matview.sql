@@ -1,3 +1,6 @@
+DROP MATERIALIZED VIEW IF EXISTS transaction_matview_new;
+DROP MATERIALIZED VIEW IF EXISTS transaction_matview_old;
+
 CREATE MATERIALIZED VIEW transaction_matview_new AS
 (
 SELECT
@@ -318,6 +321,8 @@ FROM
         )
 );
 
+BEGIN;
 ALTER MATERIALIZED VIEW IF EXISTS transaction_matview RENAME TO transaction_matview_old;
-ALTER MATERIALIZED VIEW IF EXISTS transaction_matview_new RENAME TO transaction_matview;
+ALTER MATERIALIZED VIEW transaction_matview_new RENAME TO transaction_matview;
 DROP MATERIALIZED VIEW IF EXISTS transaction_matview_old;
+COMMIT;
