@@ -7,14 +7,14 @@ SELECT
     *,
     EXTRACT(YEAR FROM (CAST(action_date AS DATE) + INTERVAL '3 month'))::INT AS fiscal_year AS fiscal_year
 FROM
-    dblink ('broker_server', '(select
+    dblink ('broker_server', '(SELECT
             -- unique ids + cols used for unique id
-            ''cont_tx_'' || detached_award_proc_unique as generated_unique_transaction_id,
-            ''cont_aw_'' ||
-                coalesce(agency_id,''-none-'') || ''_'' ||
-                coalesce(referenced_idv_agency_iden,''-none-'') || ''_'' ||
-                coalesce(piid,''-none-'') || ''_'' ||
-                coalesce(parent_award_id,''-none-'') AS generated_unique_award_id,
+            ''CONT_TX_'' || detached_award_proc_unique as generated_unique_transaction_id,
+            ''CONT_AW_'' ||
+                COALESCE(agency_id,''-NONE-'') || ''_'' ||
+                COALESCE(referenced_idv_agency_iden,''-NONE-'') || ''_'' ||
+                COALESCE(piid,''-NONE-'') || ''_'' ||
+                COALESCE(parent_award_id,''-NONE-'') AS generated_unique_award_id,
             piid,
             parent_award_id AS parent_award_piid,
             NULL AS fain,
@@ -104,14 +104,14 @@ FROM
             NULL AS sai_number
         FROM detached_award_procurement)
 
-        union all
+        UNION ALL
 
-        (select
+        (SELECT
             -- unique ids + cols used for unique id
-            ''asst_tx_'' || afa_generated_unique as generated_unique_transaction_id,
+            ''ASST_TX_'' || afa_generated_unique as generated_unique_transaction_id,
             CASE
-                WHEN record_type = ''1'' THEN ''asst_aw_'' || coalesce(awarding_sub_tier_agency_c,''-none-'') || ''_'' || ''-none-'' || ''_'' || coalesce(uri, ''-none-'')
-                WHEN record_type = ''2'' THEN ''asst_aw_'' || coalesce(awarding_sub_tier_agency_c,''-none-'') || ''_'' || coalesce(fain, ''-none-'') || ''_'' || ''-none-''
+                WHEN record_type = ''1'' THEN ''ASST_AW_'' || COALESCE(awarding_sub_tier_agency_c,''-NONE-'') || ''_'' || ''-NONE-'' || ''_'' || COALESCE(uri, ''-NONE-'')
+                WHEN record_type = ''2'' THEN ''ASST_AW_'' || COALESCE(awarding_sub_tier_agency_c,''-NONE-'') || ''_'' || COALESCE(fain, ''-NONE-'') || ''_'' || ''-NONE-''
             END AS generated_unique_award_id,
             NULL AS piid,
             NULL AS parent_award_piid,
@@ -227,7 +227,7 @@ FROM
             cfda_title,
             sai_number
         FROM published_award_financial_assistance
-        WHERE is_active=TRUE)') AS transaction
+        WHERE is_active IS TRUE)') AS transaction
         (
             -- unique ids + cols used for unique id
             generated_unique_transaction_id text,
