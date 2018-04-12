@@ -1,3 +1,72 @@
+DROP FUNCTION latest_transaction_fpds(text, text, text, text);
+
+CREATE FUNCTION latest_transaction_fpds(agency_id_in text, referenced_idv_agency_iden_in text, piid_in text, parent_award_id_in text)
+RETURNS RECORD AS $$
+DECLARE
+    result RECORD;
+BEGIN
+    SELECT
+        agency_id_in AS agency_id,
+        referenced_idv_agency_iden_in AS referenced_idv_agency_iden,
+        piid_in AS piid,
+        parent_award_id_in AS parent_award_id,
+        SUM(COALESCE(federal_action_obligation::NUMERIC, 0::NUMERIC)) AS total_obligation,
+        SUM(COALESCE(base_and_all_options_value::NUMERIC, 0::NUMERIC)) AS base_and_all_options_value,
+        MIN(NULLIF(action_date, '')::DATE) AS date_signed,
+        MAX(NULLIF(action_date, '')::DATE) AS certified_date,
+        MIN(NULLIF(period_of_performance_star, '')::DATE) AS period_of_performance_start_date,
+        MAX(NULLIF(period_of_performance_curr, '')::DATE) AS period_of_performance_current_end_date
+    FROM
+        detached_award_procurement AS dap
+    WHERE
+        dap.piid IS NOT DISTINCT FROM piid_in
+        AND
+        dap.parent_award_id IS NOT DISTINCT FROM parent_award_id
+        AND
+        dap.agency_id IS NOT DISTINCT FROM agency_id
+        AND
+        dap.referenced_idv_agency_iden IS NOT DISTINCT FROM referenced_idv_agency_iden
+    INTO
+   		result;
+
+    return result;
+END;
+$$  LANGUAGE plpgsql;
+
+DROP FUNCTION latest_transaction_fabs(text, text, text);
+
+CREATE OR REPLACE FUNCTION latest_transaction(awarding_subtier_agency_code_in text, fain_in text, uri_in text)
+RETURNS RECORD AS $$
+DECLARE
+    result RECORD;
+BEGIN
+    SELECT
+        awarding_subtier_agency_code_in AS awarding_sub_tier_agency_c,
+        fain_in AS fain,
+        uri_in AS uri,
+        SUM(COALESCE(federal_action_obligation::NUMERIC, 0::NUMERIC)) AS total_obligation,
+        SUM(COALESCE(original_loan_subsidy_cost::NUMERIC, 0::NUMERIC)) AS total_subsidy_cost,
+        SUM(COALESCE(face_value_loan_guarantee::NUMERIC, 0::NUMERIC)) AS total_loan_value,
+        SUM(COALESCE(federal_action_obligation::NUMERIC, 0::NUMERIC) + COALESCE(non_federal_funding_amount::NUMERIC, 0::NUMERIC)) AS total_funding_amount,
+        MIN(NULLIF(action_date, '')::DATE) AS date_signed,
+        MAX(NULLIF(action_date, '')::DATE) AS certified_date,
+        MIN(NULLIF(period_of_performance_star, '')::DATE) AS period_of_performance_start_date,
+        MAX(NULLIF(period_of_performance_curr, '')::DATE) AS period_of_performance_current_end_date
+    FROM
+        published_award_financial_assistance AS faba
+    WHERE
+        faba.awarding_sub_tier_agency_c IS NOT DISTINCT FROM awarding_subtier_agency_code_in
+        AND
+        faba.fain IS NOT DISTINCT FROM fain_in
+        AND
+        faba.uri IS NOT DISTINCT FROM uri_in
+    INTO
+   		result;
+
+    return result;
+END;
+$$  LANGUAGE plpgsql;
+
 DROP TABLE IF EXISTS awards_new;
 
 CREATE TABLE awards_new (
@@ -18,7 +87,7 @@ CREATE TABLE awards_new (
     total_obligation NUMERIC,
     total_subsidy_cost NUMERIC,
     total_loan_value NUMERIC,
-    total_outlay NUMERIC,
+    total_funding_amount NUMERIC,
     awarding_agency_code TEXT,
     awarding_agency_name TEXT,
     awarding_sub_tier_agency_c TEXT,
@@ -42,8 +111,8 @@ CREATE TABLE awards_new (
     certified_date DATE,
     record_type INTEGER,
     latest_transaction_unique_id TEXT,
-    total_subaward_amount NUMERIC,
-    subaward_count INTEGER,
+--    total_subaward_amount NUMERIC,
+--    subaward_count INTEGER,
     pulled_from TEXT,
     product_or_service_code TEXT,
     product_or_service_co_desc TEXT,
@@ -208,7 +277,7 @@ SELECT
     SUM(COALESCE(tf.federal_action_obligation::NUMERIC, 0::NUMERIC)) OVER w AS total_obligation,
     NULL::NUMERIC AS total_subsidy_cost,
     NULL::NUMERIC AS total_loan_value,
-    NULL::NUMERIC AS total_outlay,
+    NULL::NUMERIC AS total_funding_amount,
     LAST_VALUE(awarding_agency_code) OVER w,
     LAST_VALUE(awarding_agency_name) OVER w,
     LAST_VALUE(awarding_sub_tier_agency_c) OVER w,
@@ -232,8 +301,8 @@ SELECT
     MAX(NULLIF(tf.action_date, '')::DATE) OVER w AS certified_date,
     NULL::INTEGER AS record_type,
     LAST_VALUE(detached_award_proc_unique) OVER w AS latest_transaction_unique_id,
-    0 AS total_subaward_amount,
-    0 AS subaward_count,
+--    0 AS total_subaward_amount,
+--    0 AS subaward_count,
     LAST_VALUE(pulled_from) OVER w AS pulled_from,
     LAST_VALUE(product_or_service_code) OVER w AS product_or_service_code,
     LAST_VALUE(product_or_service_co_desc) OVER w AS product_or_service_co_desc,
@@ -421,7 +490,7 @@ SELECT
     SUM(COALESCE(pafa.federal_action_obligation::NUMERIC, 0::NUMERIC)) OVER w AS total_obligation,
     SUM(COALESCE(pafa.original_loan_subsidy_cost::NUMERIC, 0::NUMERIC)) OVER w AS total_subsidy_cost,
     SUM(COALESCE(pafa.face_value_loan_guarantee::NUMERIC, 0::NUMERIC)) OVER w AS total_loan_value,
-    NULL::NUMERIC AS total_outlay,
+    SUM(COALESCE(pafa.federal_action_obligation::NUMERIC, 0::NUMERIC) + COALESCE(pafa.non_federal_funding_amount::NUMERIC, 0::NUMERIC)) OVER w AS total_funding_amount,
     LAST_VALUE(awarding_agency_code) OVER w AS awarding_agency_code,
     LAST_VALUE(awarding_agency_name) OVER w AS awarding_agency_name,
     LAST_VALUE(awarding_sub_tier_agency_c) OVER w AS awarding_sub_tier_agency_c,
@@ -446,8 +515,8 @@ SELECT
     MAX(NULLIF(pafa.action_date, '')::DATE) OVER w AS certified_date,
     LAST_VALUE(record_type) OVER w AS record_type,
     LAST_VALUE(afa_generated_unique) OVER w AS latest_transaction_unique_id,
-    0 AS total_subaward_amount,
-    0 AS subaward_count,
+--    0 AS total_subaward_amount,
+--    0 AS subaward_count,
     NULL::TEXT AS pulled_from,
     NULL::TEXT AS product_or_service_code,
     NULL::TEXT AS product_or_service_co_desc,
@@ -659,7 +728,7 @@ SELECT
     SUM(COALESCE(pafa.federal_action_obligation::NUMERIC, 0::NUMERIC)) OVER w AS total_obligation,
     SUM(COALESCE(pafa.original_loan_subsidy_cost::NUMERIC, 0::NUMERIC)) OVER w AS total_subsidy_cost,
     SUM(COALESCE(pafa.face_value_loan_guarantee::NUMERIC, 0::NUMERIC)) OVER w AS total_loan_value,
-    NULL::NUMERIC AS total_outlay,
+    SUM(COALESCE(pafa.federal_action_obligation::NUMERIC, 0::NUMERIC) + COALESCE(pafa.non_federal_funding_amount::NUMERIC, 0::NUMERIC)) OVER w AS total_funding_amount,
     LAST_VALUE(awarding_agency_code) OVER w AS awarding_agency_code,
     LAST_VALUE(awarding_agency_name) OVER w AS awarding_agency_name,
     LAST_VALUE(awarding_sub_tier_agency_c) OVER w AS awarding_sub_tier_agency_c,
@@ -684,8 +753,8 @@ SELECT
     MAX(NULLIF(pafa.action_date, '')::DATE) OVER w AS certified_date,
     LAST_VALUE(record_type) OVER w AS record_type,
     LAST_VALUE(afa_generated_unique) OVER w AS latest_transaction_unique_id,
-    0 AS total_subaward_amount,
-    0 AS subaward_count,
+--    0 AS total_subaward_amount,
+--    0 AS subaward_count,
     NULL::text AS pulled_from,
     NULL::text AS product_or_service_code,
     NULL::text AS product_or_service_co_desc,
