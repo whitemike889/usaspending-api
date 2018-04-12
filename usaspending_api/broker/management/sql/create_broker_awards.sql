@@ -18,14 +18,14 @@ BEGIN
         MAX(NULLIF(period_of_performance_curr, '')::DATE) AS period_of_performance_current_end_date
     FROM
         detached_award_procurement AS dap
-    WHERE
-        dap.piid IS NOT DISTINCT FROM piid_in
+    WHERE 
+        (dap.piid = piid_in OR (piid_in IS NULL AND dap.piid IS NULL))
         AND
-        dap.parent_award_id IS NOT DISTINCT FROM parent_award_id
+        (dap.parent_award_id = parent_award_id_in OR (parent_award_id_in IS NULL AND dap.parent_award_id IS NULL))
         AND
-        dap.agency_id IS NOT DISTINCT FROM agency_id
-        AND
-        dap.referenced_idv_agency_iden IS NOT DISTINCT FROM referenced_idv_agency_iden
+        (dap.agency_id = agency_id_in OR (agency_id_in IS NULL AND dap.agency_id IS NULL)) 
+        AND 
+        (dap.referenced_idv_agency_iden = referenced_idv_agency_iden_in OR (referenced_idv_agency_iden_in IS NULL AND dap.referenced_idv_agency_iden IS NULL))
     INTO
    		result;
 
@@ -55,17 +55,20 @@ BEGIN
     FROM
         published_award_financial_assistance AS faba
     WHERE
-        faba.awarding_sub_tier_agency_c IS NOT DISTINCT FROM awarding_subtier_agency_code_in
+        (faba.awarding_sub_tier_agency_c = awarding_subtier_agency_code_in OR (awarding_subtier_agency_code_in IS NULL AND faba.awarding_sub_tier_agency_c IS NULL))
         AND
-        faba.fain IS NOT DISTINCT FROM fain_in
+        (faba.fain = fain_in OR (fain_in IS NULL AND faba.fain IS NULL))
         AND
-        faba.uri IS NOT DISTINCT FROM uri_in
+        (faba.uri = uri_in OR (uri_in IS NULL AND faba.uri IS NULL)) 
     INTO
    		result;
 
     return result;
 END;
 $$  LANGUAGE plpgsql;
+
+--CREATE INDEX temp_group_fpds_idx ON detached_award_procurement(piid, parent_award_id, agency_id, referenced_idv_agency_iden);
+--CREATE INDEX temp_group_fabs_idx ON published_award_financial_assistance(awarding_sub_tier_agency_c, fain, uri);
 
 DROP TABLE IF EXISTS awards_new;
 
