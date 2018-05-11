@@ -59,6 +59,7 @@ def django_db_setup(django_db_blocker,
                 **setup_databases_args
             )
         with connection.cursor() as c:
+                c.execute("CREATE USER readonly;")
                 c.execute(get_sql(ENUM_FILE)[0])
                 subprocess.call("python  " + MATVIEW_GENERATOR_FILE, shell=True)
                 for file in get_sql(TEMP_SQL_FILES):

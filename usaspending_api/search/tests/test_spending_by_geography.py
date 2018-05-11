@@ -103,7 +103,6 @@ def test_spending_by_geography_incorrect_county(client):
             'filters': all_filters()
         })
     )
-    raise Exception(resp.content)
     assert resp.data['results'][0]['display_name'] == 'County'
 
 
