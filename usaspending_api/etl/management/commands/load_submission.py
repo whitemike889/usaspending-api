@@ -565,94 +565,47 @@ def load_file_b(submission_attributes, prg_act_obj_cls_data, db_cursor):
     logger.info('Skipped a total of {} TAS rows for File B'.format(total_tas_skipped))
 
 
-def get_or_create_summary_award(awarding_agency=None, piid=None, fain=None,
-                                uri=None, parent_award_id=None, save=True):
+def find_matching_award(piid=None, parent_piid=None, fain=None, uri=None):
     """
-    Given a set of award identifiers and awarding agency information,
-    find a corresponding Award record. If we can't find one, create it.
+        Check for a distinct award that matches based on the parameters provided
 
-    Returns:
-        created: a list of new awards created, used to enable bulk insert
-        summary_award: the summary award that the calling process can map to
+        :param piid: PIID associated with a contract
+        :param parent_piid: Parent Award ID associated with a contract
+        :param fain: FAIN associated with a financial assistance award
+        :param uri: URI associated with a financial assistancw award
+        :return: Award object containing an exact matched award OR None if no exact match found
     """
-    # If an award transaction's ID is a piid, it's contract data
-    # If the ID is fain or a uri, it's financial assistance. If the award transaction
-    # has both a fain and a uri, include both.
-    try:
-        # Look for an existing award record
+    filters = {'latest_transaction_id__isnull': False}
 
-        # Check individual FILE C D linkage first
-        lookup_kwargs = {'recipient_id__isnull': False}
-        if piid is not None:
-            lookup_kwargs['piid'] = piid
-        if parent_award_id is not None:
-            lookup_kwargs['parent_award__piid'] = parent_award_id
-        if fain is not None:
-            lookup_kwargs['fain'] = fain
-        if uri is not None:
-            lookup_kwargs['uri'] = uri
+    if not (piid or fain or uri):
+        return None
 
-        award_queryset = Award.objects.filter(**lookup_kwargs)[:2]
+    # check piid and parent_piid
+    if piid:
+        filters['piid'] = piid
+        filters['parent_award_piid'] = parent_piid
+    elif fain and not uri:
+            # if only the fain is populated, filter on that
+            filters['fain'] = fain
+    elif not fain and uri:
+        # if only the uri is populated, filter on that
+        filters['uri'] = uri
+    else:
+        # if both fain and uri are populated, filter on fain first for an exact match. if no exact match found,
+        # then try filtering on the uri
+        filters['fain'] = fain
+        fain_award_count = Award.objects.filter(**filters).count()
 
-        award_count = len(award_queryset)
+        if fain_award_count != 1:
+            del filters['fain']
+            filters['uri'] = uri
 
-        if award_count == 1:
-            summary_award = award_queryset[0]
-            return [], summary_award
+    awards = Award.objects.filter(**filters).all()
 
-        # if nothing found revert to looking for an award that this record could've already created
-        lookup_kwargs = {"awarding_agency": awarding_agency}
-        for i in [(piid, "piid"), (fain, "fain"), (uri, "uri")]:
-            lookup_kwargs[i[1]] = i[0]
-            if parent_award_id:
-                # parent_award__piid
-                lookup_kwargs["parent_award_piid"] = parent_award_id
-
-        # Look for an existing award record
-        summary_award = Award.objects \
-            .filter(Q(**lookup_kwargs)) \
-            .filter(awarding_agency=awarding_agency) \
-            .first()
-        if (summary_award is None and
-                awarding_agency is not None and
-                awarding_agency.toptier_agency.name != awarding_agency.subtier_agency.name):
-            # No award match found when searching by award id info +
-            # awarding subtier agency. Relax the awarding agency
-            # critera to just the toptier agency instead of the subtier
-            # agency and try the search again.
-            awarding_agency_toptier = Agency.get_by_toptier(
-                awarding_agency.toptier_agency.cgac_code)
-
-            summary_award = Award.objects \
-                .filter(Q(**lookup_kwargs)) \
-                .filter(awarding_agency=awarding_agency_toptier) \
-                .first()
-
-        if summary_award:
-            return [], summary_award
-
-        parent_created, parent_award = [], None
-
-        # Now create the award record for this award transaction
-        create_kwargs = {"awarding_agency": awarding_agency, "parent_award": parent_award,
-                         "parent_award_piid": parent_award_id}
-        for i in [(piid, "piid"), (fain, "fain"), (uri, "uri")]:
-            create_kwargs[i[1]] = i[0]
-        summary_award = Award(**create_kwargs)
-        created = [summary_award, ]
-        created.extend(parent_created)
-
-        if save:
-            summary_award.save()
-
-        return created, summary_award
-
-    # Do not use bare except
-    except ValueError:
-        raise ValueError(
-            'Unable to find or create an award with the provided information: '
-            'piid={}, fain={}, uri={}, parent_id={}, awarding_agency={}'.format(
-                piid, fain, uri, parent_award_id, awarding_agency))
+    if len(awards) == 1:
+        return awards[0]
+    else:
+        return None
 
 
 def load_file_c(submission_attributes, db_cursor, award_financial_frame):
