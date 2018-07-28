@@ -30,12 +30,14 @@ def get_unlinked_count(file_name):
 def update_c_to_d_linkages(type):
     logger.info('Starting File C to D linkage updates for %s records' % type)
 
+    file_names = ['delete_dummy_awards.sql']
+
     if type.lower() == 'contract':
-        file_names = ['update_file_c_linkages_piid.sql']
+        file_names += ['update_file_c_linkages_piid.sql']
         unlinked_count_file_name = 'check_contract_file_c_linkages.sql'
     elif type.lower() == 'assistance':
-        file_names = ['update_file_c_linkages_fain.sql', 'update_file_c_linkages_uri.sql',
-                      'update_file_c_linkages_fain_and_uri.sql']
+        file_names += ['update_file_c_linkages_fain.sql', 'update_file_c_linkages_uri.sql',
+                       'update_file_c_linkages_fain_and_uri.sql']
         unlinked_count_file_name = 'check_assistance_file_c_linkages.sql'
     else:
         raise InvalidParameterException('Invalid type provided to process C to D linkages.')
