@@ -1,12 +1,40 @@
 EXPLAIN (ANALYZE, VERBOSE, COSTS, BUFFERS, FORMAT JSON)
-CREATE MATERIALIZED VIEW uam_explain_test AS
+CREATE MATERIALIZED VIEW uam_explain_cte_test AS
+WITH transaction_descriptions as (
+    SELECT
+      award_id,
+      string_agg(description, ' ') as description_string
+    FROM transaction_normalized
+    GROUP BY award_id
+),
+contract_data AS (
+  SELECT
+    transaction_id,
+    naics,
+    naics_description,
+    legal_entity_country_code,
+    legal_entity_country_name,
+    legal_entity_state_code,
+    legal_entity_county_code,
+    legal_entity_county_name,
+    legal_entity_congressional,
+    legal_entity_zip5,
+    pulled_from,
+    type_of_contract_pricing,
+    extent_competed,
+    type_set_aside,
+    product_or_service_code
+  FROM
+    transaction_fpds
+)
+
 SELECT
   to_tsvector(CONCAT_WS(' ',
     COALESCE(recipient_lookup.recipient_name, legal_entity.recipient_name),
     contract_data.naics,
     contract_data.naics_description,
     psc.description,
-    (SELECT string_agg(tn.description, ' ') FROM transaction_normalized AS tn WHERE tn.award_id = awards.id GROUP BY tn.award_id)
+    transaction_descriptions.description_string
   )) AS keyword_ts_vector,
   to_tsvector(CONCAT_WS(' ', awards.piid, awards.fain, awards.uri)) AS award_ts_vector,
   to_tsvector(COALESCE(recipient_lookup.recipient_name, legal_entity.recipient_name)) AS recipient_name_ts_vector,
@@ -84,11 +112,14 @@ FROM
 INNER JOIN
   transaction_normalized AS latest_transaction
     ON (awards.latest_transaction_id = latest_transaction.id)
+INNER JOIN
+  transaction_descriptions
+    ON (awards.id = transaction_descriptions.award_id)
 LEFT OUTER JOIN
   transaction_fabs
     ON (awards.latest_transaction_id = transaction_fabs.transaction_id)
-LEFT OUTER JOIN
-  transaction_fpds AS contract_data
+INNER JOIN
+  contract_data
     ON (awards.latest_transaction_id = contract_data.transaction_id)
 INNER JOIN
   legal_entity
