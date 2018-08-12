@@ -1,3 +1,5 @@
+DROP MATERIALIZED VIEW IF EXISTS uam_explain_cte_test;
+
 EXPLAIN (ANALYZE, VERBOSE, COSTS, BUFFERS, FORMAT JSON)
 CREATE MATERIALIZED VIEW uam_explain_cte_test AS
 WITH transaction_descriptions as (
