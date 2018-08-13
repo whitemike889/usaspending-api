@@ -131,13 +131,13 @@ FROM
 INNER JOIN
   transaction_normalized AS latest_transaction
     ON (awards.latest_transaction_id = latest_transaction.id)
-LATERAL JOIN
+INNER JOIN
   transaction_descriptions
     ON (awards.id = transaction_descriptions.award_id)
 LEFT OUTER JOIN
   transaction_fabs
     ON (awards.latest_transaction_id = transaction_fabs.transaction_id)
-LATERAL JOIN
+INNER JOIN
   contract_data
     ON (awards.latest_transaction_id = contract_data.transaction_id)
 INNER JOIN
