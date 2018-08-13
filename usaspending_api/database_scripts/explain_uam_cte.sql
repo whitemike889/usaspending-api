@@ -1,4 +1,20 @@
 DROP MATERIALIZED VIEW IF EXISTS uam_explain_cte_test;
+DROP MATERIALIZED VIEW IF EXISTS legal_entity_slim;
+
+CREATE MATERIALIZED VIEW legal_entity_slim AS
+  SELECT
+    legal_entity_id,
+    recipient_name,
+    recipient_unique_id,
+    parent_recipient_unique_id,
+    business_categories
+  FROM
+  legal_entity
+WITH NO DATA;
+
+CREATE INDEX idx_legal_entity_slim_legal_entity_id ON legal_entity_slim USING BTREE(legal_entity_id);
+
+REFRESH MATERIALIZED VIEW legal_entity_slim WITH DATA;
 
 EXPLAIN (ANALYZE, VERBOSE, COSTS, BUFFERS, FORMAT JSON)
 CREATE MATERIALIZED VIEW uam_explain_cte_test AS
@@ -30,16 +46,17 @@ contract_data AS (
     transaction_fpds
 )
 
+
 SELECT
   to_tsvector(CONCAT_WS(' ',
-    COALESCE(recipient_lookup.recipient_name, legal_entity.recipient_name),
+    COALESCE(recipient_lookup.recipient_name, legal_entity_slim.recipient_name),
     contract_data.naics,
     contract_data.naics_description,
     psc.description,
     transaction_descriptions.description_string
   )) AS keyword_ts_vector,
   to_tsvector(CONCAT_WS(' ', awards.piid, awards.fain, awards.uri)) AS award_ts_vector,
-  to_tsvector(COALESCE(recipient_lookup.recipient_name, legal_entity.recipient_name)) AS recipient_name_ts_vector,
+  to_tsvector(COALESCE(recipient_lookup.recipient_name, legal_entity_slim.recipient_name)) AS recipient_name_ts_vector,
 
   awards.id AS award_id,
   awards.category,
@@ -55,10 +72,10 @@ SELECT
   awards.total_loan_value,
 
   awards.recipient_id,
-  UPPER(COALESCE(recipient_lookup.recipient_name, legal_entity.recipient_name)) AS recipient_name,
-  legal_entity.recipient_unique_id AS recipient_unique_id,
-  legal_entity.parent_recipient_unique_id,
-  legal_entity.business_categories,
+  UPPER(COALESCE(recipient_lookup.recipient_name, legal_entity_slim.recipient_name)) AS recipient_name,
+  legal_entity_slim.recipient_unique_id AS recipient_unique_id,
+  legal_entity_slim.parent_recipient_unique_id,
+  legal_entity_slim.business_categories,
 
   latest_transaction.action_date,
   latest_transaction.fiscal_year,
@@ -114,25 +131,25 @@ FROM
 INNER JOIN
   transaction_normalized AS latest_transaction
     ON (awards.latest_transaction_id = latest_transaction.id)
-INNER JOIN
+LATERAL JOIN
   transaction_descriptions
     ON (awards.id = transaction_descriptions.award_id)
 LEFT OUTER JOIN
   transaction_fabs
     ON (awards.latest_transaction_id = transaction_fabs.transaction_id)
-INNER JOIN
+LATERAL JOIN
   contract_data
     ON (awards.latest_transaction_id = contract_data.transaction_id)
 INNER JOIN
-  legal_entity
-    ON (awards.recipient_id = legal_entity.legal_entity_id)
+  legal_entity_slim
+    ON (awards.recipient_id = legal_entity_slim.legal_entity_id)
 LEFT OUTER JOIN
   (SELECT
     recipient_hash,
     legal_business_name AS recipient_name,
     duns
   FROM recipient_lookup AS rlv
-  ) recipient_lookup ON recipient_lookup.duns = legal_entity.recipient_unique_id AND legal_entity.recipient_unique_id IS NOT NULL
+  ) recipient_lookup ON recipient_lookup.duns = legal_entity_slim.recipient_unique_id AND legal_entity_slim.recipient_unique_id IS NOT NULL
 LEFT OUTER JOIN
   references_location AS place_of_performance ON (awards.place_of_performance_id = place_of_performance.location_id)
 LEFT OUTER JOIN
