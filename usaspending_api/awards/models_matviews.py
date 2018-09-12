@@ -844,6 +844,14 @@ class SummaryTransactionRecipientView(models.Model):
     type = models.TextField()
     action_type = models.TextField(null=True)
     pulled_from = models.TextField()
+    modification_number = models.TextField()
+
+    federal_account_id = models.IntegerField()
+    treasury_account_id = models.IntegerField()
+    agency_identifier = models.TextField()
+    main_account_code = models.TextField()
+    account_title = models.TextField()
+    federal_account_display = models.TextField()
 
     recipient_hash = models.UUIDField()
     recipient_name = models.TextField()
@@ -858,7 +866,7 @@ class SummaryTransactionRecipientView(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'summary_transaction_recipient_view'
+        db_table = 'summary_transaction_recipient_view_temp'
 
 
 class SummaryAwardRecipientView(models.Model):
