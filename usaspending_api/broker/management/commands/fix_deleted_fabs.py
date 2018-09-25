@@ -73,24 +73,27 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         logger.info('Starting row deletion...')
 
-        if options['batches']:
-            limit = options['batches'] * options['batchsize']
-        else:
-            limit = None
-        with timer('executing query', logger.info):
-            cursor = self.fabs_cursor(limit)
+        # if options['batches']:
+        #     limit = options['batches'] * options['batchsize']
+        # else:
+        #     limit = None
+        # with timer('executing query', logger.info):
+        #     cursor = self.fabs_cursor(limit)
         batch_no = 1
         logger.info('IS_LOCAL SETTING: {}'.format(settings.IS_LOCAL))
-        while ((not options['batches']) or (batch_no <= options['batches'])):
-            message = 'Batch {} of {} rows'.format(batch_no, options['batchsize'])
-            with timer(message, logging.info):
-                rows = cursor.fetchmany(options['batchsize'])
-            if not rows:
-                logger.info('No further rows; finished')
-                return
-            delete_ids = [r[0] for r in rows]
-            with timer('deleting rows', logger.info):
-                fabs_cmd.send_deletes_to_s3(delete_ids)
-                fabs_cmd().delete_stale_fabs(delete_ids)
-            batch_no += 1
-        logger.info('{} batches finished, complete'.format(batch_no - 1))
+        logger.info('Testing dummy id: {}'.format(settings.IS_LOCAL))
+        fabs_cmd.send_deletes_to_s3(['TEST-ID'])
+
+        # while ((not options['batches']) or (batch_no <= options['batches'])):
+        #     message = 'Batch {} of {} rows'.format(batch_no, options['batchsize'])
+        #     with timer(message, logging.info):
+        #         rows = cursor.fetchmany(options['batchsize'])
+        #     if not rows:
+        #         logger.info('No further rows; finished')
+        #         return
+        #     delete_ids = [r[0] for r in rows]
+        #     with timer('deleting rows', logger.info):
+        #         fabs_cmd.send_deletes_to_s3(delete_ids)
+        #         fabs_cmd().delete_stale_fabs(delete_ids)
+        #     batch_no += 1
+        # logger.info('{} batches finished, complete'.format(batch_no - 1))
