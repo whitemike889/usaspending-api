@@ -11,6 +11,7 @@ _This API is utilized by USAspending.gov to obtain all federal spending data whi
 Ensure the following dependencies are installed and working prior to continuing:
 
 ### Requirements
+
 - [`python3`](https://docs.python-guide.org/starting/installation/#python-3-installation-guides)
 - [`pyenv`](https://github.com/pyenv/pyenv/#installation) using Python 3.5.x
   - _NOTE: Read full install. `brew install` needs to be followed by additional steps to modify and source your `~/.bash_profile`_
@@ -24,6 +25,7 @@ Ensure the following dependencies are installed and working prior to continuing:
   - OSX users will use [`Homebrew`](https://brew.sh/)
 
 ### Setup
+
 Navigate to the base file directory for the USAspending repositories
 
     $ mkdir -p usaspending && cd usaspending
@@ -37,10 +39,9 @@ Create and activate the virtual environment using `venv`, and ensure the right v
     $ python -m venv .venv/usaspending-api
     $ source .venv/usaspending-api/bin/activate
 
-
 Your prompt should then look as below to show you are _in_ the virtual environment named `usaspending-api` (_to exit that virtual environment, simply type `deactivate` at the prompt_).
 
-    (usaspending-api) $ 
+    (usaspending-api) $
 
 [`pip`](https://pip.pypa.io/en/stable/installing/) `install` application dependencies
 
@@ -49,12 +50,10 @@ Your prompt should then look as below to show you are _in_ the virtual environme
     (usaspending-api) $ pip install -r requirements/requirements.txt
 
 Set environment variables (fill in the connection string placeholders, e.g. `USER`, `PASSWORD`, `HOST`, `PORT`)
-*note: default port for PostgreSQL is `5432`
+\*note: default port for PostgreSQL is `5432`
 
 ```shell
-
 (usaspending-api) $ echo "export DATABASE_URL='postgres://USER:PASSWORD@HOST:PORT/data_store_api'" >> .envrc
-
 ```
 
 Test the database connection and upate the `data_store_api` schema
