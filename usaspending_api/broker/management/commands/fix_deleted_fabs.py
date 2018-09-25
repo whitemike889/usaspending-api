@@ -11,6 +11,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.db import connections, transaction
 from django.db.utils import ProgrammingError
+from django.conf import settings
 
 from usaspending_api.common.helpers.generic_helper import timer
 from usaspending_api.broker.management.commands.fabs_nightly_loader import Command as fabs_cmd
@@ -79,6 +80,7 @@ class Command(BaseCommand):
         with timer('executing query', logger.info):
             cursor = self.fabs_cursor(limit)
         batch_no = 1
+        logger.info('IS_LOCAL SETTING: {}'.format(settings.IS_LOCAL))
         while ((not options['batches']) or (batch_no <= options['batches'])):
             message = 'Batch {} of {} rows'.format(batch_no, options['batchsize'])
             with timer(message, logging.info):
