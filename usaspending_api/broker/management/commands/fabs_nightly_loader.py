@@ -294,7 +294,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def send_deletes_to_s3(ids_to_delete):
-        logger.info('Uploading FABS delete data to FPDS bucket')
+        logger.info('Storing FABS delete data')
 
         # Make timestamp
         seconds = int((datetime.utcnow() - datetime(1970, 1, 1)).total_seconds())
@@ -302,15 +302,19 @@ class Command(BaseCommand):
         file_with_headers = ['afa_generated_unique'] + ids_to_delete
 
         if settings.IS_LOCAL:
+            logger.info('Saving file locally!!!!!!')
+            settings.IS_LOCAL = False
+        if settings.IS_LOCAL:
             # Write to local file
             file_path = settings.CSV_LOCAL_PATH + file_name
             with open(file_path, 'w') as writer:
                 for row in file_with_headers:
                     writer.write(row + '\n')
         else:
+            logger.info('Uploading FABS delete data to FPDS bucket')
             # Write to file in S3 bucket directly
             aws_region = os.environ.get('USASPENDING_AWS_REGION')
-            fpds_bucket_name = os.environ.get('FPDS_BUCKET_NAME')
+            fpds_bucket_name = 'fpds-deleted-records-nonprod'  # os.environ.get('FPDS_BUCKET_NAME')
             s3_bucket = boto.s3.connect_to_region(aws_region).get_bucket(fpds_bucket_name)
             conn = s3_bucket.new_key(file_name)
             with smart_open.smart_open(conn, 'w') as writer:
