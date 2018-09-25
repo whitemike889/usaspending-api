@@ -132,6 +132,7 @@ def parse_source(source, columns, download_job, working_dir, start_time, message
     """Write to csv and zip files using the source data"""
     d_map = {'d1': 'contracts', 'd2': 'assistance', 'treasury_account': 'treasury_account',
              'federal_account': 'federal_account'}
+    # source_name =
     source_name = '{}_{}_{}'.format(source.agency_code, d_map[source.file_type],
                                     VALUE_MAPPINGS[source.source_type]['download_name'])
     source_query = source.row_emitter(columns)
@@ -175,11 +176,14 @@ def split_and_zip_csvs(zipfile_path, source_path, source_name, download_job=None
     try:
         # Split CSV into separate files
         log_time = time.time()
-        split_csvs = split_csv(source_path, row_limit=EXCEL_ROW_LIMIT, output_path=os.path.dirname(source_path),
-                               output_name_template='{}_%s.csv'.format(source_name))
-        if download_job:
+        if(download_job):
+            split_csvs = split_csv(source_path, row_limit=EXCEL_ROW_LIMIT, output_path=os.path.dirname(source_path),
+                                   output_name_template='{}_%s.csv'.format(download_job.file_name))
             write_to_log(message='Splitting csvs took {} seconds'.format(time.time() - log_time),
                          download_job=download_job)
+        else:
+            split_csvs = split_csv(source_path, row_limit=EXCEL_ROW_LIMIT, output_path=os.path.dirname(source_path),
+                                   output_name_template='{}_%s.csv'.format(source_name))
 
         # Zip the split CSVs into one zipfile
         log_time = time.time()
