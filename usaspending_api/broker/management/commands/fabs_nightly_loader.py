@@ -314,6 +314,7 @@ class Command(BaseCommand):
             logger.info('Uploading FABS delete data to FPDS bucket')
             # Write to file in S3 bucket directly
             aws_region = os.environ.get('USASPENDING_AWS_REGION')
+            logger.info('AWS_REGION: {}'.format(aws_region))
             fpds_bucket_name = 'fpds-deleted-records-nonprod'  # os.environ.get('FPDS_BUCKET_NAME')
             s3_bucket = boto.s3.connect_to_region(aws_region).get_bucket(fpds_bucket_name)
             conn = s3_bucket.new_key(file_name)
