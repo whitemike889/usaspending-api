@@ -123,7 +123,7 @@ def multipart_upload(bucketname, regionname, source_path, keyname, headers={}, g
         bytes = min([bytes_per_chunk, remaining_bytes])
         part_num = i + 1
         pool.apply_async(_upload_part, [bucketname, regionname, mp.id,
-                         part_num, source_path, offset, bytes])
+                                        part_num, source_path, offset, bytes])
     pool.close()
     pool.join()
 
@@ -207,7 +207,8 @@ def split_csv(file_path, delimiter=',', row_limit=10000, output_name_template='o
     current_piece = 1
     current_out_path = os.path.join(
         output_path,
-        output_name_template % current_piece
+        output_name_template % current_piece,
+        "test"
     )
     split_csvs.append(current_out_path)
     current_out_writer = csv.writer(open(current_out_path, 'w'), delimiter=delimiter)
