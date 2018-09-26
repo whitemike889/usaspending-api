@@ -18,11 +18,11 @@
 
 </ul>
 
-[//]: # (Begin Content)
+[//]: # "Begin Content"
 
 # Introductory Tutorial <a name="introduction"></a>
 
-Welcome to the introductory USAspending API tutorial. This tutorial is designed for people who aren't familiar with APIs and how to use them. If you already know what an _endpoint_ is and the difference between `GET` and `POST`, you'll want to visit [Endpoints](/docs/endpoints).
+Welcome to the introductory USAspending API tutorial. This tutorial is designed for people who aren't familiar with APIs and how to use them. If you already know what an _endpoint_ is and the difference between `GET` and `POST`, you'll want to visit [Endpoints](/docs/endpoints). Test view change.
 
 ## What's an API? <a name="whats-an-api"></a>
 
@@ -42,7 +42,6 @@ When you type a URL into your browser, it usually returns a web page: a document
 
 The USAspending API supports a number of endpoints. For example `/api/v2/search/spending_by_award/` is our Advanced Award Search endpoint for the Spending by Award table.
 
-
 #### GET vs POST requests <a name="get-vs-post"></a>
 
 Most endpoints support both GET and POST methods for making a request.
@@ -52,6 +51,7 @@ Requests for a specific record (with a known numerical identifier) are made via 
 You can also use simple filters in a GET request. An example of this would be `/api/v2/financial_balances/agencies?funding_agency=775&fiscal_year=2017`, which would retrieves financial balance information by funding agency, with the identifier of `775` and a fiscal year of `2017`.
 
 POST requests are leveraged in situations where more advanced filtering is required. For example, `/api/v2/search/spending_by_award/` would have filters as such:
+
 ```
 {
   "filters": {

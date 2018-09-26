@@ -178,13 +178,13 @@ def split_and_zip_csvs(zipfile_path, source_path, source_name, download_job=None
         log_time = time.time()
         if(download_job):
             split_csvs = split_csv(source_path, row_limit=EXCEL_ROW_LIMIT, output_path=os.path.dirname(source_path),
-                                   output_name_template='{}_%s.txt'.format(download_job.file_name))
+                                   output_name_template='{}_%s.csv'.format(download_job.file_name))
             write_to_log(message='Splitting csvs took {} seconds'.format(time.time() - log_time),
                          download_job=download_job)
 
         else:
             split_csvs = split_csv(source_path, row_limit=EXCEL_ROW_LIMIT, output_path=os.path.dirname(source_path),
-                                   output_name_template='{}_%s.txt'.format(source_name))
+                                   output_name_template='{}_%s.csv'.format(source_name))
 
         # Zip the split CSVs into one zipfile
         log_time = time.time()

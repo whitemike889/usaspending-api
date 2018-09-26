@@ -207,8 +207,7 @@ def split_csv(file_path, delimiter=',', row_limit=10000, output_name_template='o
     current_piece = 1
     current_out_path = os.path.join(
         output_path,
-        output_name_template % current_piece,
-        "test"
+        output_name_template % current_piece
     )
     split_csvs.append(current_out_path)
     current_out_writer = csv.writer(open(current_out_path, 'w'), delimiter=delimiter)
