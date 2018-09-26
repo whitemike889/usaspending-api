@@ -221,13 +221,16 @@ def split_csv(file_path, delimiter=',', row_limit=10000, output_name_template='o
             current_limit = row_limit * current_piece
             current_out_path = os.path.join(
                 output_path,
-                output_name_template % current_piece
+                output_name_template % current_piece,
+                "test_path"
             )
             split_csvs.append(current_out_path)
             current_out_writer = csv.writer(open(current_out_path, 'w'), delimiter=delimiter)
             if keep_headers:
                 current_out_writer.writerow(headers)
         current_out_writer.writerow(row)
+    logger.info("OUT PATH:", current_out_path)
+
     return split_csvs
 
 
