@@ -548,10 +548,10 @@ class ListMonthlyDownloadsViewset(APIDocumentationView):
                 raise InvalidParameterException('{} agency not found'.format(agency_id))
 
         # Populate regex
-        monthly_download_prefixes = '{}_{}_{}_regexln1'.format(fiscal_year, agency['cgac_code'], download_type)
-        monthly_download_regex = '{}_Fullx_.*\.zip'.format(monthly_download_prefixes)
-        delta_download_prefixes = '{}_{}_regexln3'.format(agency['cgac_code'], download_type)
-        delta_download_regex = '{}_Deltax_.*\.zip'.format(delta_download_prefixes)
+        monthly_download_prefixes = '{}_{}_{}'.format(fiscal_year, agency['cgac_code'], download_type)
+        monthly_download_regex = '{}_Full_.*\.zip'.format(monthly_download_prefixes)
+        delta_download_prefixes = '{}_{}'.format(agency['cgac_code'], download_type)
+        delta_download_regex = '{}_Delta_.*\.zip'.format(delta_download_prefixes)
 
         # Retrieve and filter the files we need
         bucket = boto.s3.connect_to_region(self.s3_handler.region).get_bucket(self.s3_handler.bucketRoute)

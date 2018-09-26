@@ -83,7 +83,7 @@ class Command(BaseCommand):
             # Derive the correction_delete_ind from the created_at of the records
             source.queryset = source.queryset. \
                 annotate(correction_delete_ind=Case(When(transaction__contract_data__created_at__lt=generate_since,
-                                                    then=Value('C')), default=Value(''), output_field=CharField()))
+                                                         then=Value('C')), default=Value(''), output_field=CharField()))
         source.queryset = source.queryset.filter(**{
             'transaction__{}__{}__gte'.format(award_map['model'], award_map['date_filter']): generate_since
         })
@@ -111,7 +111,9 @@ class Command(BaseCommand):
         working_dir = '{}_{}_delta_gen_{}/'.format(settings.CSV_LOCAL_PATH, agency_code, timestamp)
         if not os.path.exists(working_dir):
             os.mkdir(working_dir)
-        source_name = '{}_{}_delta'.format(award_type, VALUE_MAPPINGS['transactions']['download_name'])
+        # source_name = '{}_{}_delta'.format(award_type, VALUE_MAPPINGS['transactions']['download_name'])
+        source_name = '{}_{}_delta_testx'.format(award_type, VALUE_MAPPINGS['transactions']['download_name'])
+
         source_path = os.path.join(working_dir, '{}.csv'.format(source_name))
 
         # Create a unique temporary file with the raw query
