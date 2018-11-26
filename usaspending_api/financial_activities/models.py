@@ -374,12 +374,11 @@ class TasProgramActivityObjectClassQuarterly(DataSourceTrackedModel):
         """
         Recalculate quarterly financial numbers for any downstream submissions
 
-        Use when the given submission has been re-loaded, so that values
-        calculated based on changes in cumulative numbers may need
-        recaclulation.
+        Use when the given submission has been re-loaded, so that values calculated based on changes in cumulative
+        numbers may need recalculation.
 
-        "Downstream" means for the following quarter and, in turn, its
-        following quarters (recursively) through the end of the year.
+        "Downstream" means for the following quarter and, in turn, its following quarters (recursively) through the end
+        of the year.
         """
 
         for downstream_submission in SubmissionAttributes.objects.filter(previous_submission=submission).all():
