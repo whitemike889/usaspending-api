@@ -6,7 +6,7 @@ _This API is utilized by USAspending.gov to obtain all federal spending data whi
 
 ![USAspending Landing Page](readme.jpg?raw=true "Readme")
 
-## Install 
+## Install
 
 Ensure the following dependencies are installed and working prior to continuing:
 
