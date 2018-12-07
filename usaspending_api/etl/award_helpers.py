@@ -306,6 +306,7 @@ def get_awarding_agency(row):
 
 
 def update_idv_awards(award_tuple=None):
+    """ Updates the type and type descriptins of the awards, specifically regarding IDVs """
     award_predicate = ""
     sql = """
 UPDATE awards a
@@ -337,6 +338,7 @@ WHERE t.transaction_id = a.latest_transaction_id AND t.pulled_from = 'IDV'{}"""
 
 
 def award_types(row):
+    """ Simply returns the award type and descrption given the transaction row from FPDS or FABS """
     pulled_from = row.get("pulled_from", None)
     idv_type = row.get("idv_type", None)
     type_of_idc = row.get("type_of_idc", None)
@@ -357,3 +359,78 @@ def award_types(row):
         award_type_desc = row.get("idv_type_description")
 
     return award_type, award_type_desc
+
+def update_parent_award_trees(award_tuple=None):
+    """ Simply goes through the parent_award and updates the IDV totals"""
+    sql = """
+        WITH recursive cte AS (
+    
+        SELECT
+            p.award_id idv_id,
+            p.award_id,
+            p.generated_unique_award_id,
+            true is_idv,
+            a.agency_id,
+            a.piid,
+            a.type,
+            p.total_obligation
+        FROM
+            parent_award AS p
+            INNER JOIN awards AS a ON a.id = p.award_id
+        WHERE
+            p.award_id = 69174425
+    
+        UNION ALL
+    
+        SELECT
+            c.idv_id,
+            a.id,
+            a.generated_unique_award_id,
+            case when a.type like 'IDV\_%' then true else false end is_idv,
+            a.agency_id,
+            a.piid,
+            a.type,
+            coalesce(a.total_obligation, 0)::numeric(23, 2)
+        FROM
+            cte c
+            INNER JOIN awards AS a ON
+                a.referenced_idv_agency_iden = c.agency_id and
+                a.parent_award_piid = c.piid and
+                a.id != c.award_id
+        WHERE
+            c.is_idv = true
+    
+    )
+    UPDATE
+        parent_award
+    SET
+        total_obligation = c.total_obligation
+    FROM
+        (
+            SELECT
+                idv_id,
+                SUM(CASE WHEN is_idv THEN 0 ELSE COALESCE(total_obligation, 0) end) AS total_obligation
+            FROM
+                cte
+            GROUP BY
+                idv_id
+        ) AS c 
+    WHERE
+        {}
+    """
+
+    if award_tuple:
+        award_predicate = " c.idv_id IN %s"
+    else:
+        award_predicate = " c.idv_id = parent_award.award_id;"
+
+    with connection.cursor() as cursor:
+        # If another expression is added and includes %s, you must add the tuple for that string interpolation to this
+        # list (even if it uses the same one!)
+        if award_tuple:
+            cursor.execute(sql.format(award_predicate), [award_tuple])
+        else:
+            cursor.execute(sql.format(award_predicate))
+        rows = cursor.rowcount
+
+    return rows

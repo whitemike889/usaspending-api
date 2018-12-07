@@ -18,7 +18,7 @@ from usaspending_api.broker.models import ExternalDataLoadDate
 from usaspending_api.common.helpers.etl_helpers import update_c_to_d_linkages
 from usaspending_api.common.helpers.generic_helper import fy, timer, upper_case_dict_values
 from usaspending_api.etl.award_helpers import (update_awards, update_contract_awards, update_award_categories,
-                                               award_types)
+                                               award_types, update_parent_award_trees)
 from usaspending_api.etl.broker_etl_helpers import dictfetchall
 from usaspending_api.etl.management.load_base import load_data_into_model, format_date, create_location
 from usaspending_api.references.models import LegalEntity, Agency
@@ -27,6 +27,7 @@ from usaspending_api.references.models import LegalEntity, Agency
 logger = logging.getLogger("console")
 
 AWARD_UPDATE_ID_LIST = []
+IDV_UPDATE_ID_LIST = []
 BATCH_FETCH_SIZE = 25000
 
 
@@ -273,6 +274,10 @@ class Command(BaseCommand):
             # Append row to list of Awards updated
             AWARD_UPDATE_ID_LIST.append(award.id)
 
+            # Keep track of IDVS added/updated
+            if row.get("pulled_from", None) == 'IDV':
+                IDV_UPDATE_ID_LIST.append(award.id)
+
             if row["last_modified"] and len(str(row["last_modified"])) == len("YYYY-MM-DD HH:MM:SS"):  # 19 characters
                 dt_fmt = "%Y-%m-%d %H:%M:%S"
             else:
@@ -395,6 +400,10 @@ class Command(BaseCommand):
             # Update FPDS-specific Awards based on the info in child transactions
             with timer("updating contract-specific awards to reflect their latest transaction info", logger.info):
                 update_contract_awards(tuple(AWARD_UPDATE_ID_LIST))
+
+            # Update FPDS-specific Awards based on the info in child transactions
+            with timer("updating contract-specific awards to reflect their latest transaction info", logger.info):
+                update_parent_award_trees(tuple(IDV_UPDATE_ID_LIST))
 
             # Update AwardCategories based on changed FPDS records
             with timer("updating award category variables", logger.info):
