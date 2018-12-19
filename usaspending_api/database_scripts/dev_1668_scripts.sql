@@ -199,8 +199,6 @@ ALTER INDEX "transaction_fabs_afa_generated_unique_bb7b8f4b_like" RENAME TO "tra
 ALTER INDEX "tx_fabs_updated_at_asc" RENAME TO "transaction_fabs_updated_at_1091bb24";
 ALTER INDEX "tx_fpds_updated_at_asc" RENAME TO "transaction_fpds_updated_at_e69f8257";
 
-CREATE INDEX "awards_description_926c9c54" ON "awards" ("description");
-CREATE INDEX "awards_description_926c9c54_like" ON "awards" ("description" text_pattern_ops);
 CREATE INDEX "legal_entity_recipient_name_idx" ON "legal_entity" USING btree ("recipient_name");
 
 -- Move away from open ended NUMERICs in favor of well defined.  Also, standardize on (23, 2).
