@@ -1,5 +1,5 @@
 -- No materialized views were harmed in the making of this script.
-BEGIN;
+-- BEGIN;
 
 DROP INDEX "award_category_type_code_idx"; -- replaced with primary key below
 DROP INDEX "duns_awardee_idx"; -- replaced with primary key below
@@ -380,4 +380,4 @@ ALTER TABLE "transaction_fpds"
     ALTER COLUMN "created_at" TYPE timestamp with time zone,
     ALTER COLUMN "updated_at" TYPE timestamp with time zone;
 
-COMMIT;
+-- COMMIT;
