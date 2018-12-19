@@ -31,7 +31,7 @@
     "LEFT OUTER JOIN",
     "  references_location AS place_of_performance ON (transaction_normalized.place_of_performance_id = place_of_performance.location_id)",
     "WHERE",
-    "  transaction_normalized.action_date >= '2007-10-01' AND",
+    "  transaction_normalized.action_date >= '2017-10-01' AND",
     "  place_of_performance.location_country_code = 'USA' AND",
     "  place_of_performance.state_code IS NOT NULL",
     "GROUP BY",
