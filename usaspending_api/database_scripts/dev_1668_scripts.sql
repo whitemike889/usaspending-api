@@ -1,150 +1,152 @@
 -- No materialized views were harmed in the making of this script.
 -- BEGIN;
 
-DROP INDEX "award_category_type_code_idx"; -- replaced with primary key below
-DROP INDEX "duns_awardee_idx"; -- replaced with primary key below
-DROP INDEX "historic_parent_duns_awardee_idx"; -- removed by request
-DROP INDEX "historic_parent_duns_year_idx"; -- removed by request
-DROP INDEX "idx_recipient_profile_uniq"; -- re-added as a constraint below
-DROP INDEX "legal_entity_recipient_name_idx"; -- removed by request
-DROP INDEX "transaction_fabs_afa_generated_unique_key"; -- re-added as a constraint below
-DROP INDEX "transaction_fabs_awarding_sub_tier_agency_cc5ccd22_uniq"; -- re-added as a constraint below
-DROP INDEX "transaction_fpds_detached_award_proc_unique_key"; -- re-added as constraint below
-DROP INDEX "tx_norm_tx_uniq_id"; -- removed by request
+-- DROP INDEX "award_category_type_code_idx"; -- replaced with primary key below
+-- DROP INDEX "duns_awardee_idx"; -- replaced with primary key below
+-- DROP INDEX "historic_parent_duns_awardee_idx"; -- removed by request
+-- DROP INDEX "historic_parent_duns_year_idx"; -- removed by request
+-- DROP INDEX "idx_recipient_profile_uniq"; -- re-added as a constraint below
+-- DROP INDEX "legal_entity_recipient_name_idx"; -- removed by request
+-- DROP INDEX "transaction_fabs_afa_generated_unique_key"; -- re-added as a constraint below
+-- DROP INDEX "transaction_fabs_awarding_sub_tier_agency_cc5ccd22_uniq"; -- re-added as a constraint below
+-- DROP INDEX "transaction_fpds_detached_award_proc_unique_key"; -- re-added as constraint below
+-- DROP INDEX "tx_norm_tx_uniq_id"; -- removed by request
 
--- These were all bigint which is the default.  Probably an artifact of upgrading to PostgreSQL 10.  Previously,
--- the data type could not be specified and was always bigint.  Changed to match the data type of the ID
--- to which they were assigned.
-ALTER SEQUENCE "agency_id_seq" AS integer;
-ALTER SEQUENCE "appropriation_account_balance_appropriation_account_balance_seq" AS integer;
-ALTER SEQUENCE "appropriation_account_balances_quarterly_id_seq" AS integer;
-ALTER SEQUENCE "auth_group_id_seq" AS integer;
-ALTER SEQUENCE "auth_group_permissions_id_seq" AS integer;
-ALTER SEQUENCE "auth_permission_id_seq" AS integer;
-ALTER SEQUENCE "auth_user_groups_id_seq" AS integer;
-ALTER SEQUENCE "auth_user_id_seq" AS integer;
-ALTER SEQUENCE "auth_user_user_permissions_id_seq" AS integer;
-ALTER SEQUENCE "awards_subaward_id_seq" AS integer;
-ALTER SEQUENCE "budget_authority_id_seq" AS integer;
-ALTER SEQUENCE "django_admin_log_id_seq" AS integer;
-ALTER SEQUENCE "django_content_type_id_seq" AS integer;
-ALTER SEQUENCE "django_migrations_id_seq" AS integer;
-ALTER SEQUENCE "download_job_download_job_id_seq" AS integer;
-ALTER SEQUENCE "external_data_load_date_external_data_load_date_id_seq" AS integer;
-ALTER SEQUENCE "external_data_type_external_data_type_id_seq" AS integer;
-ALTER SEQUENCE "federal_account_id_seq" AS integer;
-ALTER SEQUENCE "filter_hash_id_seq" AS integer;
-ALTER SEQUENCE "financial_accounts_by_awards_financial_accounts_by_awards_i_seq" AS integer;
-ALTER SEQUENCE "financial_accounts_by_program_financial_accounts_by_program_seq" AS integer;
-ALTER SEQUENCE "frec_map_id_seq" AS integer;
-ALTER SEQUENCE "gtas_total_obligation_id_seq" AS integer;
-ALTER SEQUENCE "job_status_job_status_id_seq" AS integer;
-ALTER SEQUENCE "object_class_id_seq" AS integer;
-ALTER SEQUENCE "office_agency_office_agency_id_seq" AS integer;
-ALTER SEQUENCE "overall_totals_id_seq" AS integer;
-ALTER SEQUENCE "ref_city_county_code_city_county_code_id_seq" AS integer;
-ALTER SEQUENCE "ref_program_activity_id_seq" AS integer;
-ALTER SEQUENCE "references_cfda_id_seq" AS integer;
-ALTER SEQUENCE "references_definition_id_seq" AS integer;
-ALTER SEQUENCE "rest_framework_tracking_apirequestlog_id_seq" AS integer;
-ALTER SEQUENCE "submission_attributes_submission_id_seq" AS integer;
-ALTER SEQUENCE "subtier_agency_subtier_agency_id_seq" AS integer;
-ALTER SEQUENCE "tas_program_activity_object_class_quarterly_id_seq" AS integer;
-ALTER SEQUENCE "toptier_agency_toptier_agency_id_seq" AS integer;
-ALTER SEQUENCE "treasury_appropriation_account_treasury_account_identifier_seq" AS integer;
+-- -- These were all bigint which is the default.  Probably an artifact of upgrading to PostgreSQL 10.  Previously,
+-- -- the data type could not be specified and was always bigint.  Changed to match the data type of the ID
+-- -- to which they were assigned.
+-- ALTER SEQUENCE "agency_id_seq" AS integer;
+-- ALTER SEQUENCE "appropriation_account_balance_appropriation_account_balance_seq" AS integer;
+-- ALTER SEQUENCE "appropriation_account_balances_quarterly_id_seq" AS integer;
+-- ALTER SEQUENCE "auth_group_id_seq" AS integer;
+-- ALTER SEQUENCE "auth_group_permissions_id_seq" AS integer;
+-- ALTER SEQUENCE "auth_permission_id_seq" AS integer;
+-- ALTER SEQUENCE "auth_user_groups_id_seq" AS integer;
+-- ALTER SEQUENCE "auth_user_id_seq" AS integer;
+-- ALTER SEQUENCE "auth_user_user_permissions_id_seq" AS integer;
+-- ALTER SEQUENCE "awards_subaward_id_seq" AS integer;
+-- ALTER SEQUENCE "budget_authority_id_seq" AS integer;
+-- ALTER SEQUENCE "django_admin_log_id_seq" AS integer;
+-- ALTER SEQUENCE "django_content_type_id_seq" AS integer;
+-- ALTER SEQUENCE "django_migrations_id_seq" AS integer;
+-- ALTER SEQUENCE "download_job_download_job_id_seq" AS integer;
+-- ALTER SEQUENCE "external_data_load_date_external_data_load_date_id_seq" AS integer;
+-- ALTER SEQUENCE "external_data_type_external_data_type_id_seq" AS integer;
+-- ALTER SEQUENCE "federal_account_id_seq" AS integer;
+-- ALTER SEQUENCE "filter_hash_id_seq" AS integer;
+-- ALTER SEQUENCE "financial_accounts_by_awards_financial_accounts_by_awards_i_seq" AS integer;
+-- ALTER SEQUENCE "financial_accounts_by_program_financial_accounts_by_program_seq" AS integer;
+-- ALTER SEQUENCE "frec_map_id_seq" AS integer;
+-- ALTER SEQUENCE "gtas_total_obligation_id_seq" AS integer;
+-- ALTER SEQUENCE "job_status_job_status_id_seq" AS integer;
+-- ALTER SEQUENCE "object_class_id_seq" AS integer;
+-- ALTER SEQUENCE "office_agency_office_agency_id_seq" AS integer;
+-- ALTER SEQUENCE "overall_totals_id_seq" AS integer;
+-- ALTER SEQUENCE "ref_city_county_code_city_county_code_id_seq" AS integer;
+-- ALTER SEQUENCE "ref_program_activity_id_seq" AS integer;
+-- ALTER SEQUENCE "references_cfda_id_seq" AS integer;
+-- ALTER SEQUENCE "references_definition_id_seq" AS integer;
+-- ALTER SEQUENCE "rest_framework_tracking_apirequestlog_id_seq" AS integer;
+-- ALTER SEQUENCE "submission_attributes_submission_id_seq" AS integer;
+-- ALTER SEQUENCE "subtier_agency_subtier_agency_id_seq" AS integer;
+-- ALTER SEQUENCE "tas_program_activity_object_class_quarterly_id_seq" AS integer;
+-- ALTER SEQUENCE "toptier_agency_toptier_agency_id_seq" AS integer;
+-- ALTER SEQUENCE "treasury_appropriation_account_treasury_account_identifier_seq" AS integer;
 
-ALTER TABLE ONLY "appropriation_account_balances"
-    ALTER COLUMN "data_source" TYPE text; -- from varchar
+-- ALTER TABLE ONLY "appropriation_account_balances"
+--     ALTER COLUMN "data_source" TYPE text; -- from varchar
 
-ALTER TABLE ONLY "appropriation_account_balances_quarterly"
-    ALTER COLUMN "data_source" TYPE text; -- from varchar
+-- ALTER TABLE ONLY "appropriation_account_balances_quarterly"
+--     ALTER COLUMN "data_source" TYPE text; -- from varchar
 
-ALTER TABLE ONLY "awards"
-    RENAME CONSTRAINT "award_awarding_agency_fk" TO "awards_awarding_agency_id_a8cf5df8_fk_agency_id";
-ALTER TABLE ONLY "awards"
-    RENAME CONSTRAINT "award_funding_agency_fk" TO "awards_funding_agency_id_aafee1a4_fk_agency_id";
-ALTER TABLE ONLY "awards"
-    RENAME CONSTRAINT "award_latest_tx_fk" TO "awards_latest_transaction_id_a78dcb0f_fk";
-ALTER TABLE ONLY "awards"
-    RENAME CONSTRAINT "award_legal_entity_fk" TO "awards_recipient_id_3cdf8905_fk";
-ALTER TABLE ONLY "awards"
-    RENAME CONSTRAINT "award_ppop_location_fk" TO "awards_place_of_performance_id_7d7369e6_fk";
+-- ALTER TABLE ONLY "awards"
+--     RENAME CONSTRAINT "award_awarding_agency_fk" TO "awards_awarding_agency_id_a8cf5df8_fk_agency_id";
+-- ALTER TABLE ONLY "awards"
+--     RENAME CONSTRAINT "award_funding_agency_fk" TO "awards_funding_agency_id_aafee1a4_fk_agency_id";
+-- ALTER TABLE ONLY "awards"
+--     RENAME CONSTRAINT "award_latest_tx_fk" TO "awards_latest_transaction_id_a78dcb0f_fk";
+-- ALTER TABLE ONLY "awards"
+--     RENAME CONSTRAINT "award_legal_entity_fk" TO "awards_recipient_id_3cdf8905_fk";
+-- ALTER TABLE ONLY "awards"
+--     RENAME CONSTRAINT "award_ppop_location_fk" TO "awards_place_of_performance_id_7d7369e6_fk";
 
-ALTER TABLE ONLY "awards"
-    ALTER COLUMN "generated_unique_award_id" SET NOT NULL,
-    ALTER COLUMN "is_fpds" SET NOT NULL,
-    ALTER COLUMN "subaward_count" SET NOT NULL,
-    ALTER COLUMN "transaction_unique_id" SET NOT NULL,
-    ALTER CONSTRAINT "awards_awarding_agency_id_a8cf5df8_fk_agency_id" DEFERRABLE INITIALLY DEFERRED,
-    ALTER CONSTRAINT "awards_funding_agency_id_aafee1a4_fk_agency_id" DEFERRABLE INITIALLY DEFERRED,
-    ALTER CONSTRAINT "awards_funding_agency_id_aafee1a4_fk_agency_id" DEFERRABLE INITIALLY DEFERRED;
+-- ALTER TABLE ONLY "awards"
+--     ALTER COLUMN "generated_unique_award_id" SET NOT NULL,
+--     ALTER COLUMN "is_fpds" SET NOT NULL,
+--     ALTER COLUMN "subaward_count" SET NOT NULL,
+--     ALTER COLUMN "transaction_unique_id" SET NOT NULL,
+--     ALTER CONSTRAINT "awards_awarding_agency_id_a8cf5df8_fk_agency_id" DEFERRABLE INITIALLY DEFERRED,
+--     ALTER CONSTRAINT "awards_funding_agency_id_aafee1a4_fk_agency_id" DEFERRABLE INITIALLY DEFERRED,
+--     ALTER CONSTRAINT "awards_funding_agency_id_aafee1a4_fk_agency_id" DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE ONLY "award_category"
-    ADD PRIMARY KEY ("type_code");
+-- ALTER TABLE ONLY "award_category"
+--     ADD PRIMARY KEY ("type_code");
 
-ALTER TABLE ONLY "duns"
-    ALTER COLUMN "awardee_or_recipient_uniqu" SET NOT NULL,
-    ALTER COLUMN "broker_duns_id" SET NOT NULL,
-    ALTER COLUMN "update_date" SET NOT NULL,
-    ADD CONSTRAINT "duns_pkey" PRIMARY KEY ("awardee_or_recipient_uniqu");
+-- ALTER TABLE ONLY "duns"
+--     ALTER COLUMN "awardee_or_recipient_uniqu" SET NOT NULL,
+--     ALTER COLUMN "broker_duns_id" SET NOT NULL,
+--     ALTER COLUMN "update_date" SET NOT NULL,
+--     ADD CONSTRAINT "duns_pkey" PRIMARY KEY ("awardee_or_recipient_uniqu");
 
-ALTER TABLE ONLY "recipient_lookup"
-    ADD CONSTRAINT "recipient_lookup_duns_ae948c75_uniq" UNIQUE ("duns");
+-- ALTER TABLE ONLY "recipient_lookup"
+--     ADD CONSTRAINT "recipient_lookup_duns_ae948c75_uniq" UNIQUE ("duns");
 
-ALTER TABLE ONLY "financial_accounts_by_awards"
-    RENAME CONSTRAINT "faba_award_fk" TO "financial_accounts_by_awards_award_id_eb90a5fa_fk_awards_id";
+-- ALTER TABLE ONLY "financial_accounts_by_awards"
+--     RENAME CONSTRAINT "faba_award_fk" TO "financial_accounts_by_awards_award_id_eb90a5fa_fk_awards_id";
 
-ALTER TABLE ONLY "financial_accounts_by_awards"
-    ALTER COLUMN "data_source" TYPE text; -- from varchar
+-- ALTER TABLE ONLY "financial_accounts_by_awards"
+--     ALTER COLUMN "data_source" TYPE text; -- from varchar
 
-ALTER TABLE ONLY "financial_accounts_by_program_activity_object_class"
-    ALTER COLUMN "data_source" TYPE text; -- from varchar
+-- ALTER TABLE ONLY "financial_accounts_by_program_activity_object_class"
+--     ALTER COLUMN "data_source" TYPE text; -- from varchar
 
-ALTER TABLE ONLY "historic_parent_duns"
-    ALTER COLUMN "awardee_or_recipient_uniqu" SET NOT NULL,
-    ALTER COLUMN "broker_historic_duns_id" SET NOT NULL,
-    ALTER COLUMN "broker_historic_duns_id" TYPE int USING "broker_historic_duns_id"::int, -- from text
-    ADD CONSTRAINT "historic_parent_duns_broker_historic_duns_id_0dd7a627_pk" PRIMARY KEY ("broker_historic_duns_id");
+-- ALTER TABLE ONLY "historic_parent_duns"
+--     ALTER COLUMN "awardee_or_recipient_uniqu" SET NOT NULL,
+--     ALTER COLUMN "broker_historic_duns_id" SET NOT NULL,
+--     ALTER COLUMN "broker_historic_duns_id" TYPE int USING "broker_historic_duns_id"::int, -- from text
+--     ADD CONSTRAINT "historic_parent_duns_broker_historic_duns_id_0dd7a627_pk" PRIMARY KEY ("broker_historic_duns_id");
 
-UPDATE "legal_entity" SET "business_categories" = '{}' WHERE "business_categories" IS NULL;
+-- UPDATE "legal_entity" SET "business_categories" = '{}' WHERE "business_categories" IS NULL;
 
-ALTER TABLE ONLY "legal_entity"
-    RENAME CONSTRAINT "le_location_fk" TO "legal_entity_location_id_7f712296_fk";
 
-ALTER TABLE ONLY "legal_entity"
-    ALTER COLUMN "is_fpds" SET NOT NULL,
-    ALTER COLUMN "reporting_period_end" TYPE date USING "reporting_period_end"::date, -- from text
-    ALTER COLUMN "reporting_period_start" TYPE date USING "reporting_period_start"::date, -- from text
-    ALTER COLUMN "transaction_unique_id" SET NOT NULL,
-    ALTER COLUMN "business_categories" SET NOT NULL;
+-- ALTER TABLE ONLY "legal_entity"
+--     RENAME CONSTRAINT "le_location_fk" TO "legal_entity_location_id_7f712296_fk";
 
-ALTER TABLE ONLY "recipient_profile"
-    ALTER COLUMN "last_12_months" SET NOT NULL,
-    ALTER COLUMN "recipient_affiliations" SET NOT NULL,
-    ALTER COLUMN "recipient_level" TYPE character varying(1), -- from fixed width char(1)
-    DROP CONSTRAINT "recipient_profile_id_key",
-    ADD CONSTRAINT "recipient_profile_pkey" PRIMARY KEY (id),
-    ADD CONSTRAINT "recipient_profile_recipient_hash_recipient_level_ee7ecd55_uniq" UNIQUE ("recipient_hash", "recipient_level");
+-- ALTER TABLE ONLY "legal_entity"
+--     ALTER COLUMN "is_fpds" SET NOT NULL,
+--     ALTER COLUMN "reporting_period_end" TYPE date USING "reporting_period_end"::date, -- from text
+--     ALTER COLUMN "reporting_period_start" TYPE date USING "reporting_period_start"::date, -- from text
+--     ALTER COLUMN "transaction_unique_id" SET NOT NULL,
+--     ALTER COLUMN "business_categories" SET NOT NULL;
 
-ALTER TABLE ONLY "references_cfda"
-    ALTER COLUMN "data_source" TYPE text; -- from varchar
+-- ALTER TABLE ONLY "recipient_profile"
+--     ALTER COLUMN "last_12_months" SET NOT NULL,
+--     ALTER COLUMN "recipient_affiliations" SET NOT NULL,
+--     ALTER COLUMN "recipient_level" TYPE character varying(1), -- from fixed width char(1)
+--     DROP CONSTRAINT "recipient_profile_id_key",
+--     ADD CONSTRAINT "recipient_profile_pkey" PRIMARY KEY (id),
+--     ADD CONSTRAINT "recipient_profile_recipient_hash_recipient_level_ee7ecd55_uniq" UNIQUE ("recipient_hash", "recipient_level");
 
-ALTER TABLE ONLY "references_legalentityofficers"
-    ADD CONSTRAINT "references_legalenti_legal_entity_id_2e4739e1_fk_legal_ent" FOREIGN KEY ("legal_entity_id") REFERENCES "legal_entity"("legal_entity_id") DEFERRABLE INITIALLY DEFERRED;
+-- ALTER TABLE ONLY "references_cfda"
+--     ALTER COLUMN "data_source" TYPE text; -- from varchar
 
-ALTER TABLE ONLY "references_location"
-    ALTER COLUMN "is_fpds" SET NOT NULL,
-    ALTER COLUMN "place_of_performance_flag" SET NOT NULL,
-    ALTER COLUMN "recipient_flag" SET NOT NULL,
-    ALTER COLUMN "reporting_period_end" TYPE date USING "reporting_period_end"::date, -- from text
-    ALTER COLUMN "reporting_period_start" TYPE date USING "reporting_period_start"::date, -- from text
-    ALTER COLUMN "transaction_unique_id" SET NOT NULL;
+-- ALTER TABLE ONLY "references_legalentityofficers"
+--     ADD CONSTRAINT "references_legalenti_legal_entity_id_2e4739e1_fk_legal_ent" FOREIGN KEY ("legal_entity_id") REFERENCES "legal_entity"("legal_entity_id") DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE ONLY "subaward"
-    RENAME CONSTRAINT "subaward_prime_recipient_id_dcb32e13_fk_legal_ent" TO "subaward_prime_recipient_id_dcb32e13_fk";
-ALTER TABLE ONLY "subaward"
-    RENAME CONSTRAINT "awards_subaward_award_id_82b3b128_fk_awards_id" TO "subaward_award_id_9e8ee0ce_fk";
+-- ALTER TABLE ONLY "references_location"
+--     ALTER COLUMN "is_fpds" SET NOT NULL,
+--     ALTER COLUMN "place_of_performance_flag" SET NOT NULL,
+--     ALTER COLUMN "recipient_flag" SET NOT NULL,
+--     ALTER COLUMN "reporting_period_end" TYPE date USING "reporting_period_end"::date, -- from text
+--     ALTER COLUMN "reporting_period_start" TYPE date USING "reporting_period_start"::date, -- from text
+--     ALTER COLUMN "transaction_unique_id" SET NOT NULL;
 
+-- ALTER TABLE ONLY "subaward"
+--     RENAME CONSTRAINT "subaward_prime_recipient_id_dcb32e13_fk_legal_ent" TO "subaward_prime_recipient_id_dcb32e13_fk";
+-- ALTER TABLE ONLY "subaward"
+--     RENAME CONSTRAINT "awards_subaward_award_id_82b3b128_fk_awards_id" TO "subaward_award_id_9e8ee0ce_fk";
+
+---- THIS NEEDS TO BE MOVED TO dev_1668_scripts__matviews.sql
 ALTER TABLE ONLY "subaward"
     ALTER COLUMN "award_id" TYPE bigint, -- from int
     ALTER COLUMN "prime_recipient_id" TYPE bigint; -- from int
