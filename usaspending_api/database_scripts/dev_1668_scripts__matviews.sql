@@ -39,3 +39,5 @@ ALTER TABLE "transaction_normalized"
     ALTER COLUMN "original_loan_subsidy_cost" TYPE numeric(23, 2);
 
 -- COMMIT;
+
+VACUUM FULL ANALYZE VERBOSE;
